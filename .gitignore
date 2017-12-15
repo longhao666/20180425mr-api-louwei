@@ -1,4 +1,6 @@
 Thumbs.db
+*.a
+*.o
 *.obj
 *.exe
 *.pdb
@@ -28,3 +30,4 @@ _ReSharper*/
 *.vssscc
 $tf*/
 _DEL/
+build/
