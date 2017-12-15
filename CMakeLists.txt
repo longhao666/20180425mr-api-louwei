@@ -10,15 +10,39 @@ MESSAGE("${LIB_NAME}_SOURCE_DIR : ${${LIB_NAME}_SOURCE_DIR}")
 SET(EXECUTABLE_OUTPUT_PATH ${${LIB_NAME}_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH    ${${LIB_NAME}_SOURCE_DIR}/lib)
 
+SET(USE_CAN_DRIVER "pcan")
 #ADD_DEFINITIONS(-DXENOMAI)
 #ADD_DEFINITIONS(-DNOT_USE_DYNAMIC_LOADING)
 
 FIND_PACKAGE(Threads REQUIRED)
 
-FIND_LIBRARY(PCAN_LIB_LIBRARY  		 NAMES pcan PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
-  
 INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/include)
-INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux)
+
+IF(${USE_CAN_DRIVER} MATCHES "pcanbasic")
+	MESSAGE("using pcanbasic")
+	ADD_DEFINITIONS(-DPCAN_BASIC)
+	FIND_LIBRARY(CAN_DRIVER_LIB		 NAMES pcanbasic PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
+	INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
+	SET(DRIVER_SRC
+		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
+		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_pcan.c
+	)
+	SET(DRIVER_INCS
+		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.h
+	)
+ELSE(${USE_CAN_DRIVER} MATCHES "pcan")
+	MESSAGE("using peak driver")
+	ADD_DEFINITIONS(-DCAN_PEAK_LINUX)
+	FIND_LIBRARY(CAN_DRIVER_LIB		 NAMES pcan PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
+	INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux)
+	SET(DRIVER_SRC
+		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.c
+		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/thread_linux.c
+	)
+	SET(DRIVER_INCS
+		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.h
+	)
+ENDIF()
 
 #LINK_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/INSTALL/lib/)
 
@@ -29,16 +53,12 @@ SET(SRC_SRCS
 )
 
 SET(LIBCF_INCS
+	${DRIVER_INCS}
 	${${LIB_NAME}_SOURCE_DIR}/include/module.h
 	${${LIB_NAME}_SOURCE_DIR}/include/joint.h
 	${${LIB_NAME}_SOURCE_DIR}/include/master.h
-	${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.h
 )
 
-SET(DRIVER_SRC
-	${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.c
-	${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/thread_linux.c
-)
 
 SET(SRCS
 	${SRC_SRCS}
@@ -48,7 +68,7 @@ SET(SRCS
 
 ADD_LIBRARY(${LIB_NAME} STATIC ${SRCS})
 
-TARGET_LINK_LIBRARIES(${LIB_NAME} ${PCAN_LIB_LIBRARY})
+TARGET_LINK_LIBRARIES(${LIB_NAME} ${CAN_DRIVER_LIB})
 #TARGET_LINK_LIBRARIES(${LIB_NAME} rtdm)
 
 #SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${XENOMAI_CFLAGS}")

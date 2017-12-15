@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-//#define DEBUG_MSG_CONSOLE_ON
-#define DEBUG_MSG_CONSOLE_OFF
+#define DEBUG_MSG_CONSOLE_ON
+// #define DEBUG_MSG_CONSOLE_OFF
 
 #define MSG   printf
 #define MSG_WARN(str) printf("Warning: %s\n", str)

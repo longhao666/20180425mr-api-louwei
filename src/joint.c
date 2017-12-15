@@ -275,6 +275,7 @@ jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
 
 Joint* jointInit(uint16_t id, canSend_t canSend) {
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
+  pJoint->basicModule = (Module*)malloc(sizeof(Module));
   pJoint->basicModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
   pJoint->basicModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
   pJoint->basicModule->writeDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));

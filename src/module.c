@@ -19,8 +19,8 @@ int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData) {
 
 ///write entry without reply
 int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataType) {
-  if ((d->accessType[index] != WO) || (d->accessType[index]) != RW) {
-    MSG_ERROR("Write Pemission");
+  if ((d->accessType[index] != WO) && (d->accessType[index]) != RW) {
+    MSG_ERROR("Write Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;
@@ -36,8 +36,8 @@ int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataTy
 }
 
 int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t dataType, mCallback_t callBack) {
-  if ((d->accessType[index] != WO) || (d->accessType[index]) != RW) {
-    MSG_ERROR("Write Pemission");
+  if ((d->accessType[index] != WO) && (d->accessType[index]) != RW) {
+    MSG_ERROR("Write Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;
@@ -55,8 +55,9 @@ int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t 
 }
 
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack) {
-  if ((d->accessType[index] != RO) || (d->accessType[index]) != RW) {
-    MSG_ERROR("Read Pemission");
+  if ((d->accessType[index] != RO) && (d->accessType[index]) != RW) {
+    printf("d->accessType[index] = %d\n", d->accessType[index]);
+    MSG_ERROR("Read Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;

@@ -1,6 +1,5 @@
 #include <math.h>
 #include "master.h"
-#include "can_peak_linux.h"
 
 #define UNUSED(arg) (void)arg
 
@@ -91,9 +90,9 @@ void _canReadISR(Message* msg) {
   uint16_t id = cob_id&0x000F;
 
   // assume module is a joint
-  Joint* pJoint = findJoint(id);
-  if (!pJoint) {
-    pJoint = jointInit(id, hCanUsed);
+ Joint* pJoint = findJoint(id);
+ if (!pJoint) {
+    pJoint = jointInit(id, can1Send);
     jointGetType(pJoint, onTypeUpdate);
 
     // pGripper = gripperInit(id, can2Send);
@@ -106,7 +105,7 @@ void _canReadISR(Message* msg) {
 int32_t startMaster(void) {
 
   // Open and Initiallize CAN Port
-  CAN_HANDLE hCan1 = canOpen_driver("32", "1M");
+  hCan1 = canOpen_driver("32", "1M");
   // Use CAN1 as the device
   hCanUsed = hCan1;
 

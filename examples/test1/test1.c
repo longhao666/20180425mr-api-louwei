@@ -33,6 +33,8 @@ int main(int argc, char const *argv[])
     startMaster();
     MSG("Master Started.\n");
     setTimerCallback(10, timer1ms);
-    while(1);
+    while(1) {
+        
+    }
     return 0;
 }

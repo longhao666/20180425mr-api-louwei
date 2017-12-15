@@ -6,7 +6,7 @@
 // #include <time.h>
 #include <string.h>
 
-#include "can_peak_linux.h"
+#include "pcan_basic.h"
 
 static pthread_mutex_t CanThread_mutex;
 
@@ -140,7 +140,7 @@ void* canReceiveLoop(void* fd0)
     //}
     Message rxMsg = Message_Initializer;
     while (1) {
-        // MSG("CAN reading loop\n");
+        MSG("CAN reading loop\n");
         if (canReceive_driver(fd0, &rxMsg) != 0) {
             EnterMutex();
             if (canRxInterruptISR)
@@ -159,12 +159,16 @@ void* canReceiveLoop(void* fd0)
 void CreateReceiveTask(CAN_HANDLE fd0, TASK_HANDLE* Thread, void* ReceiveLoopPtr)
 {
     int ret;
+    TPCANStatus status;
+    void* hEvent = NULL;
 
     canRxInterruptISR = ReceiveLoopPtr;
     if (canRxInterruptISR == NULL) {
         perror("canRxInterruptISR cannot be NULL.\n");
         return;
     }
+
+    status = CAN_SetValue(fd0, PCAN_RECEIVE_EVENT, &hEvent, sizeof(hEvent));
 
     ret = pthread_mutex_init(&CanThread_mutex, NULL);
     if(pthread_create(Thread, NULL, canReceiveLoop, (void*)fd0)) {
