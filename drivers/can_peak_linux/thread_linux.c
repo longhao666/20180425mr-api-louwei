@@ -14,7 +14,7 @@ static struct timeval last_sig;
 
 static timer_t timer;
 
-TIMEVAL timerVal = MS_TO_TIMEVAL(5); //default 5ms
+TIMEVAL timerVal = MS_TO_TIMEVAL(1); //default 5ms
 
 void setTimer(TIMEVAL value);
 
