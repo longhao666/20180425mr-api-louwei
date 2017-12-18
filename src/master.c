@@ -78,13 +78,14 @@ void scanJoint(uint16_t id) {
 
 int32_t onTypeUpdate(void* handle, void* args) {
   UNUSED(args);
-  Joint* pJoint = (Joint*)handle;
-  if (isJointType(*(pJoint->jointType))){
-    addJoint(pJoint);
+  Module* pModule = (Module*)handle;
+  if (isJointType(pModule->memoryTable[0x02])){
+    MSG("addJoint");
+    //addJoint(pJoint);
     return 0;  
   }
   // Not a Joint
-  delJoint(pJoint);
+//  delJoint(pJoint);
   return -1;
 }
 
@@ -100,7 +101,7 @@ void _canReadISR(Message* msg) {
     /// Here a joint is initiallized, and memory is attributed, BUT if
     /// no reply of jointGetType, memory cannot be released
     pJoint = jointInit(id, can1Send);
-    // addJoint(pJoint);
+    addJoint(pJoint);
     jointGetType(pJoint, onTypeUpdate);
 
     // pGripper = gripperInit(id, can2Send);

@@ -102,14 +102,14 @@ void canDispatch(Module *d, Message *msg)
     return;
   }
   switch(cob_id>>8){
-    // case 0x00:
+    // case 0x0:
     // uint8_t cmd = msg->data[0];
     // uint8_t index = msg->data[1];
     // if (cmd == CMDTYPE_WR) {
 
     // }
     // break;
-    case 0x10: {   //ack 0x100+nodeid
+    case 0x1: {   //ack 0x100+nodeid
       uint8_t cmd = msg->data[0];
       uint8_t index = msg->data[1];
       uint8_t len = msg->len - 2;
@@ -124,7 +124,7 @@ void canDispatch(Module *d, Message *msg)
       }
     }
     break;
-    case 0x20:
+    case 0x2:
     break;
 
     default:
