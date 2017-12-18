@@ -272,6 +272,25 @@ const uint8_t joint_accessType[10][16] =
 
 jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
 
+// callback of read command
+int32_t _onReadEntry(void* handle, uint8_t index, void* args) {
+  Module* d = (Module*)handle;
+  if (jointCb[index]) {
+    jointCb[index]((void*)d, args);
+    jointCb[index] = 0;  // delete callback
+  }
+
+  return 0;
+}
+
+int32_t _onWriteEntry(void* handle, uint8_t index, void* args) {
+  Module* d = (Module*)handle;
+  if(index == TAG_WORK_MODE) {
+
+  }
+  return 0;
+}
+
 
 Joint* jointInit(uint16_t id, canSend_t canSend) {
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
@@ -299,7 +318,7 @@ int32_t jointDestroy(Joint* pJoint) {
       free(pJoint->basicModule->readDoneCb);
     if (pJoint->basicModule->writeDoneCb)
       free(pJoint->basicModule->writeDoneCb);
-
+    free(pJoint->basicModule);
     free(pJoint);
     return 0;
   }
@@ -310,7 +329,7 @@ void jointMsgRoute(Joint* pJoint, Message* msg) {
   canDispatch(pJoint->basicModule, msg);
 }
 
-int32_t jointSetPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel) {
+int32_t jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel) {
   uint32_t buf[2];
   buf[0] = targetPos;
   buf[1] = targetVel;
@@ -326,24 +345,6 @@ void jointStopServo(Joint* pJoint) {
 
 }
 
-// callback of read command
-int32_t _onReadEntry(void* handle, uint8_t index, void* args) {
-  Module* d = (Module*)handle;
-  if (jointCb[index]) {
-    jointCb[index]((void*)d, args);
-    jointCb[index] = 0;  // delete callback
-  }
-
-  return 0;
-}
-
-int32_t _onWriteEntry(void* handle, uint8_t index, void* args) {
-  Module* d = (Module*)handle;
-  if(index == TAG_WORK_MODE) {
-
-  }
-  return 0;
-}
 
 /// Get Information from Joints
 int32_t jointGetId(Joint* pJoint, jCallback_t callBack) {

@@ -48,6 +48,7 @@ void jointMsgRoute(Joint* pJoint, Message* msg);
 int32_t jointGetId(Joint* pJoint, jCallback_t callBack);
 int32_t jointGetType(Joint* pJoint, jCallback_t callBack);
 int32_t jointGetVoltage(Joint* pJoint, jCallback_t callBack);
+int32_t jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel);
 
 int32_t jointSetMode(Joint* pJoint, uint16_t mode);
 #endif

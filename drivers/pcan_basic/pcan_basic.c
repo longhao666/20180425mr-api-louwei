@@ -31,16 +31,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#include "libpcan.h"
 //#include "pcan.h"
 
-#include "can_peak_linux.h" // for CAN_HANDLE
-
-#include "can_driver.h"
+#include "pcan_basic.h" // for CAN_HANDLE
 
 // Define for rtr CAN message
 #define CAN_INIT_TYPE_ST PCAN_MESSAGE_STANDARD
 #define CAN_INIT_TYPE_ST_RTR PCAN_MESSAGE_STANDARD | PCAN_MESSAGE_RTR 
 
 /*********functions which permit to communicate with the board****************/
-uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m)
+uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
 {
   uint8_t data, ret = 0; 
   TPCANStatus status;
@@ -48,10 +46,9 @@ uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m)
   TPCANTimestamp timeStamp;
 
   memset(&peakMsg, 0, sizeof(TPCANMsg));
-  status = CAN_Read(fd0, &peakMsg, &timeStamp);		// Poll
+  status = CAN_Read(handle, &peakMsg, &timeStamp);		// Poll
   if (status == PCAN_ERROR_OK)
   {
-    memcpy((void*)&peakMsg, (void*)&peakMsg.Msg, sizeof(TPCANMsg));
     m->cob_id = peakMsg.ID;   
     if (peakMsg.MSGTYPE == CAN_INIT_TYPE_ST)         	/* bits of MSGTYPE_*/
       m->rtr = 0;
@@ -80,7 +77,7 @@ uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m)
 }
 
 /***************************************************************************/
-uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m)
+uint8_t canSend_driver(CAN_HANDLE handle, Message const *m)
 {
   uint8_t data;
   TPCANStatus status;
@@ -96,7 +93,7 @@ uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m)
   for(data = 0 ; data <  m->len; data ++)
   	peakMsg.DATA[data] = m->data[data];         	/* data bytes, up to 8 */
   
-  status = CAN_Write(fd0, & peakMsg);
+  status = CAN_Write(handle, & peakMsg);
   if(status != PCAN_ERROR_OK) {
     char errText[256];
     CAN_GetErrorText(status, 0, errText);
@@ -125,22 +122,22 @@ int TranslateBaudeRate(char* optarg){
 }
 
 CAN_HANDLE TranslateCANHandle(char* optarg){
-  if(!strcmp( optarg, "pcan1")) return PCAN_PCIBUS1;
-  if(!strcmp( optarg, "pcan2")) return PCAN_PCIBUS2;
-  if(!strcmp( optarg, "pcan3")) return PCAN_PCIBUS3;
-  if(!strcmp( optarg, "pcan4")) return PCAN_PCIBUS4;
-  if(!strcmp( optarg, "pcan5")) return PCAN_PCIBUS5;
-  if(!strcmp( optarg, "pcan6")) return PCAN_PCIBUS6;
-  if(!strcmp( optarg, "pcan7")) return PCAN_PCIBUS7;
-  if(!strcmp( optarg, "pcan8")) return PCAN_PCIBUS8;
-  if(!strcmp( optarg, "pcan9")) return PCAN_PCIBUS9;
-  if(!strcmp( optarg, "pcan10")) return PCAN_PCIBUS10;
-  if(!strcmp( optarg, "pcan11")) return PCAN_PCIBUS11;
-  if(!strcmp( optarg, "pcan12")) return PCAN_PCIBUS12;
-  if(!strcmp( optarg, "pcan13")) return PCAN_PCIBUS13;
-  if(!strcmp( optarg, "pcan14")) return PCAN_PCIBUS14;
-  if(!strcmp( optarg, "pcan15")) return PCAN_PCIBUS15;
-  if(!strcmp( optarg, "pcan16")) return PCAN_PCIBUS16;
+  if(!strcmp( optarg, "pcan1")) return PCAN_USBBUS1;
+  if(!strcmp( optarg, "pcan2")) return PCAN_USBBUS2;
+  if(!strcmp( optarg, "pcan3")) return PCAN_USBBUS3;
+  if(!strcmp( optarg, "pcan4")) return PCAN_USBBUS4;
+  if(!strcmp( optarg, "pcan5")) return PCAN_USBBUS5;
+  if(!strcmp( optarg, "pcan6")) return PCAN_USBBUS6;
+  if(!strcmp( optarg, "pcan7")) return PCAN_USBBUS7;
+  if(!strcmp( optarg, "pcan8")) return PCAN_USBBUS8;
+  if(!strcmp( optarg, "pcan9")) return PCAN_USBBUS9;
+  if(!strcmp( optarg, "pcan10")) return PCAN_USBBUS10;
+  if(!strcmp( optarg, "pcan11")) return PCAN_USBBUS11;
+  if(!strcmp( optarg, "pcan12")) return PCAN_USBBUS12;
+  if(!strcmp( optarg, "pcan13")) return PCAN_USBBUS13;
+  if(!strcmp( optarg, "pcan14")) return PCAN_USBBUS14;
+  if(!strcmp( optarg, "pcan15")) return PCAN_USBBUS15;
+  if(!strcmp( optarg, "pcan16")) return PCAN_USBBUS16;
   if(!strcmp( optarg, "none")) return 0;
   return 0x0000;
 }
@@ -154,16 +151,16 @@ uint8_t canChangeBaudRate_driver( CAN_HANDLE fd, char* baud)
 /***************************************************************************/
 CAN_HANDLE canOpen_driver(char* busname, char* baud)
 {
-  CAN_HANDLE fd0 = NULL;
+  CAN_HANDLE handle = NULL;
   int baudrate;
 
   TPCANStatus status;
   
-  fd0 = TranslateCANHandle(busname);
+  handle = TranslateCANHandle(busname);
 
-  if(fd0 && (baudrate = TranslateBaudeRate(baud)))
+  if(handle && (baudrate = TranslateBaudeRate(baud)))
   {
-   	status = CAN_Initialize(fd0, baudrate);
+   	status = CAN_Initialize(handle, baudrate, 0, 0, 0);
     if (status != PCAN_ERROR_OK) {
       char errText[256];
       CAN_GetErrorText(status, 0, errText);
@@ -173,13 +170,13 @@ CAN_HANDLE canOpen_driver(char* busname, char* baud)
   	fprintf(stderr, "canOpen_driver (PCANBasic) : error opening %s.\n", busname);
   }
 
-  return (CAN_HANDLE)fd0;
+  return (CAN_HANDLE)handle;
 }
 
 /***************************************************************************/
-int canClose_driver(CAN_HANDLE fd0)
+int canClose_driver(CAN_HANDLE handle)
 {
-  TPCANStatus status = CAN_Uninitialize(fd0);
+  TPCANStatus status = CAN_Uninitialize(handle);
 
   if (status != PCAN_ERROR_OK) {
     char errText[256];

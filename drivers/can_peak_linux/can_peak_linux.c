@@ -70,7 +70,6 @@ uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m)
     ret =  1;
   }
   else if (result != CAN_ERR_QRCVEMPTY) {
-    fprintf(stderr,"CAN_Status(fd0) %d", CAN_Status(fd0));
     fprintf(stderr,"canReceive_driver (Peak_Linux) : error of reading.\n");
     ret = 0;
   }

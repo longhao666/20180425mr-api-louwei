@@ -1,9 +1,9 @@
 #include <stdlib.h>
-
 #include <sys/time.h>
-
+#include <asm/types.h>
+#include <unistd.h>
 #include <signal.h>
-// #include <time.h>
+#include <math.h>
 #include <string.h>
 
 #include "pcan_basic.h"
@@ -31,38 +31,39 @@ void LeaveMutex(void)
         perror("pthread_mutex_unlock() failed\n");
     }
 }
-static void (*Timer_1ms)(void*) = NULL;
-static void (*Timer_5ms)(void*) = NULL;
-static void (*Timer_10ms)(void*) = NULL;
+// static void (*Timer_1ms)(void*) = NULL;
+// static void (*Timer_5ms)(void*) = NULL;
+// static void (*Timer_10ms)(void*) = NULL;
 
-void TimeDispatch(struct timeval* tv) {
-    static uint16_t cnt5ms = 0;
-    static uint16_t cnt10ms = 0;
+// void TimeDispatch(struct timeval* tv) {
+//     static uint16_t cnt5ms = 0;
+//     static uint16_t cnt10ms = 0;
 
-    if (Timer_1ms) Timer_1ms(tv);
+//     if (Timer_1ms) Timer_1ms(tv);
 
-    if(cnt5ms++ >= 5) {
-        cnt5ms = 0;
-        if (Timer_5ms) Timer_5ms(tv);
-    }
-    if(cnt10ms++ >= 10) {
-        cnt10ms = 0;
-        if (Timer_10ms) Timer_10ms(tv);
-    }
-}
+//     if(cnt5ms++ >= 5) {
+//         cnt5ms = 0;
+//         if (Timer_5ms) Timer_5ms(tv);
+//     }
+//     if(cnt10ms++ >= 10) {
+//         cnt10ms = 0;
+//         if (Timer_10ms) Timer_10ms(tv);
+//     }
+// }
 
 void setTimerInterval(uint32_t t) {
     timerVal = t;
 }
 
-int32_t setTimerCb_driver(uint8_t ms, void* timerPtr) {
-    if (ms == 1) Timer_1ms = timerPtr;
-    else if(ms == 5) Timer_5ms = timerPtr;
-    else if(ms == 10) Timer_10ms = timerPtr;
-    else return -1;
-    return 0;
-}
+// int32_t setTimerCb_driver(uint8_t ms, void* timerPtr) {
+//     if (ms == 1) Timer_1ms = timerPtr;
+//     else if(ms == 5) Timer_5ms = timerPtr;
+//     else if(ms == 10) Timer_10ms = timerPtr;
+//     else return -1;
+//     return 0;
+// }
 
+static void (*canTxPeriodic)(struct timeval* tv) = NULL;
 /// It's a cycle timer
 void timer_notify(sigval_t val)
 {
@@ -71,18 +72,22 @@ void timer_notify(sigval_t val)
         perror("gettimeofday()");
     }
     // EnterMutex();
-    TimeDispatch(&last_sig);
+    // TimeDispatch(&last_sig);
+    canTxPeriodic(&last_sig);
     // LeaveMutex();
 }
 
-void StartTimerLoop(void)
+void StartTimerLoop(int16_t hz, void* periodCall)
 {
     struct sigevent sigev;
+    float val = 1000000.0/(float)hz;
 
     // Take first absolute time ref.
     if(gettimeofday(&last_sig,NULL)){
         perror("gettimeofday()");
     }
+
+    canTxPeriodic = periodCall;
 
     memset (&sigev, 0, sizeof (struct sigevent));
     sigev.sigev_value.sival_int = 0;
@@ -93,6 +98,8 @@ void StartTimerLoop(void)
     if(timer_create (CLOCK_REALTIME, &sigev, &timer)) {
         perror("timer_create()");
     }
+    setTimerInterval(round(val));
+
     setTimer(timerVal);
 }
 
@@ -132,16 +139,33 @@ static void (*canRxInterruptISR)(Message* msg) = NULL;
  * Enter in realtime and start the CAN receiver loop
  * @param port
  */
-void* canReceiveLoop(void* fd0)
+void* canReceiveLoop(void* arg)
 {
+    int fd;
+    TPCANStatus status;
+    fd_set Fds;
+    CAN_HANDLE handle = (CAN_HANDLE)arg;
+
     /*get signal*/
-    //  if(signal(SIGTERM, canReceiveLoop_signal) == SIG_ERR) {
-    //      perror("signal()");
-    //}
+    if(signal(SIGTERM, canReceiveLoop_signal) == SIG_ERR) {
+        perror("signal()");
+    }
+    status = CAN_GetValue(handle, PCAN_RECEIVE_EVENT, &fd, sizeof(int));
+   
+    if (status != PCAN_ERROR_OK) {
+      char errText[256];
+      CAN_GetErrorText(status, 0, errText);
+      fprintf(stderr, "CAN_GetValue (PCANBasic) : %s.\n", errText);
+        return NULL;
+    }
+    /* Watch stdin (fd 0) to see when it has input. */
+    FD_ZERO(&Fds);
+    FD_SET(fd, &Fds);
+
     Message rxMsg = Message_Initializer;
-    while (1) {
-        MSG("CAN reading loop\n");
-        if (canReceive_driver(fd0, &rxMsg) != 0) {
+    while (select(fd+1, &Fds, NULL, NULL, NULL) > 0) {
+        // MSG("CAN reading loop\n");
+        if (canReceive_driver(handle, &rxMsg) != 0) {
             EnterMutex();
             if (canRxInterruptISR)
                 canRxInterruptISR(&rxMsg);
@@ -156,11 +180,9 @@ void* canReceiveLoop(void* fd0)
     return NULL;
 }
 
-void CreateReceiveTask(CAN_HANDLE fd0, TASK_HANDLE* Thread, void* ReceiveLoopPtr)
+void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoopPtr)
 {
     int ret;
-    TPCANStatus status;
-    void* hEvent = NULL;
 
     canRxInterruptISR = ReceiveLoopPtr;
     if (canRxInterruptISR == NULL) {
@@ -168,20 +190,22 @@ void CreateReceiveTask(CAN_HANDLE fd0, TASK_HANDLE* Thread, void* ReceiveLoopPtr
         return;
     }
 
-    status = CAN_SetValue(fd0, PCAN_RECEIVE_EVENT, &hEvent, sizeof(hEvent));
-
     ret = pthread_mutex_init(&CanThread_mutex, NULL);
-    if(pthread_create(Thread, NULL, canReceiveLoop, (void*)fd0)) {
+    if(pthread_create(Thread, NULL, canReceiveLoop, (void*)handle)) {
         perror("pthread_create()\n");
     }
     MSG("pthread_create()\n");
 }
 
-void WaitReceiveTaskEnd(TASK_HANDLE *Thread)
+void DestroyReceiveTask(TASK_HANDLE* Thread)
 {
     if(pthread_kill(*Thread, SIGTERM)) {
         perror("pthread_kill()");
     }
+}
+
+void WaitReceiveTaskEnd(TASK_HANDLE* Thread) 
+{
     if(pthread_join(*Thread, NULL)) {
         perror("pthread_join()");
     }

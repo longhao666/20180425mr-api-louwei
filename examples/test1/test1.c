@@ -2,6 +2,7 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "master.h"
 
 void timer1ms(void* curTime) {
@@ -32,9 +33,13 @@ int main(int argc, char const *argv[])
 
     startMaster();
     MSG("Master Started.\n");
-    setTimerCallback(10, timer1ms);
-    while(1) {
-        
-    }
+    // setTimerCallback(10, timer1ms);
+    
+    joinMaster();
+    // while(1) {
+    //     sleep(1);
+    // }
+
+
     return 0;
 }

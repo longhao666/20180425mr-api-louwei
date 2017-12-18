@@ -18,6 +18,7 @@ void scanJoint(uint16_t id);
 void canReadThread(Message* msg);
 int32_t startMaster(void);
 int32_t stopMaster(void);
-int32_t setTimerCallback(uint8_t ms, void* timerPtr);
+int32_t joinMaster(void);
+// int32_t setTimerCallback(uint8_t ms, void* timerPtr);
 
 #endif

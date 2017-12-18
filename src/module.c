@@ -92,7 +92,11 @@ int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestDa
 void canDispatch(Module *d, Message *msg)
 {
   uint16_t cob_id = msg->cob_id;
-  uint16_t nodeid = cob_id&0x000F;
+  uint16_t nodeid = geNodeId(cob_id);
+  if (msg->rtr) {
+    MSG_WARN("remote frame received");
+    return;
+  }
   if (nodeid != *d->moduleId) {
     MSG_WARN("Dismatched id!");
     return;
@@ -121,6 +125,9 @@ void canDispatch(Module *d, Message *msg)
     }
     break;
     case 0x20:
+    break;
+
+    default:
     break;
   }
 }
