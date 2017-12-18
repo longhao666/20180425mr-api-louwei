@@ -33,8 +33,6 @@ typedef struct td_module
     mCallback_t* writeDoneCb;
 }Module;
 
-void canDispatch(Module *d, Message *msg);
-
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack);
 int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t dataType, mCallback_t callBack);
 int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData);

@@ -2,6 +2,8 @@
 #define __JOINT_H__
 #include "module.h"
 
+#define MAX_JOINTS 10
+
 //模块类型宏定义
 #define MODEL_TYPE_M14        0x010
 #define MODEL_TYPE_M17        0x020
@@ -33,23 +35,25 @@
 						||(t==MODEL_TYPE_M20E)||(t==MODEL_TYPE_LIFT)
 #define isJointMode(t) (t==MODE_OPEN)||(t==MODE_CURRENT)||(t==MODE_SPEED)||(t==MODE_POSITION)
 
-typedef int32_t (*jCallback_t)(void* handle, void* args);
-
 typedef struct td_joint
 {
-	uint16_t* jointId;
-	uint16_t* jointType;
-	Module* basicModule;
+    Module* basicModule;
+    uint16_t* jointId;
+    uint16_t* jointType;
 }Joint;
 
-Joint* jointInit(uint16_t id, canSend_t canSend);
-int32_t jointDestroy(Joint* pJoint);
-void jointMsgRoute(Joint* pJoint, Message* msg);
-int32_t jointGetId(Joint* pJoint, jCallback_t callBack);
-int32_t jointGetType(Joint* pJoint, jCallback_t callBack);
-int32_t jointGetVoltage(Joint* pJoint, jCallback_t callBack);
-int32_t jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel);
+Joint*  jointUp(uint16_t id, canSend_t canSend);
+int32_t jointDown(Joint* pJoint);
+Joint*  jointSelect(uint16_t id);
 
-int32_t jointSetMode(Joint* pJoint, uint16_t mode);
+int32_t jointGetId(Joint* pJoint, mCallback_t callBack);
+int32_t jointGetType(Joint* pJoint, mCallback_t callBack);
+int32_t jointGetVoltage(Joint* pJoint, mCallback_t callBack);
+
+int32_t jointSetMode(Joint* pJoint, uint16_t mode,  mCallback_t callBack);
+
+int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout);
+
+
 #endif
 

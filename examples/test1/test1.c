@@ -26,20 +26,16 @@ void signal_handler(int signal)
 int main(int argc, char const *argv[])
 {
     /* code */
+    Joint* joint1 = NULL;
     /* install signal handlers */
-    // mlockall(MCL_CURRENT | MCL_FUTURE);
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
     startMaster();
     MSG("Master Started.\n");
-    // setTimerCallback(10, timer1ms);
     
+    joint1 = jointUp(0x01, can1Send);
+
     joinMaster();
-    // while(1) {
-    //     sleep(1);
-    // }
-
-
     return 0;
 }

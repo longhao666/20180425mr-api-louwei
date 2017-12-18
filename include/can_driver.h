@@ -3,10 +3,12 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define DEBUG_MSG_CONSOLE_ON
 // #define DEBUG_MSG_CONSOLE_OFF
 
+#define delay_us(n) usleep(n)
 #define MSG   printf
 #define MSG_WARN(str) printf("Warning: %s\n", str)
 #define MSG_ERROR(str) printf("Error: %s\n", str)
@@ -29,7 +31,6 @@ typedef uint8_t (*canSend_t)(Message *);
 static inline void print_message(Message* m)
 {
     int i;
-    uint8_t fc;
     MSG("id:%02x ", m->cob_id);
 
     MSG(" rtr:%d", m->rtr);

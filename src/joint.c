@@ -270,29 +270,52 @@ const uint8_t joint_accessType[10][16] =
   },
 };
 
-jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
+int32_t addJoint(Joint* pJoint);
+int32_t delJoint(Joint* pJoint);
 
+//jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
+Joint* jointStack[MAX_JOINTS];    // online joint stack
+uint16_t jointNbr = 0;
+int16_t timeout_flag[CMDMAP_LEN] = {0};
+
+#define READ_IN_PROGRESS -1
+#define READ_ACK_OK 1
+#define READ_IDLE 0
 // callback of read command
-int32_t _onReadEntry(void* handle, uint8_t index, void* args) {
-  Module* d = (Module*)handle;
-  if (jointCb[index]) {
-    jointCb[index]((void*)d, args);
-    jointCb[index] = 0;  // delete callback
-  }
+int32_t _onCommonReadEntry(void* module, uint8_t index, void* args) {
+  Module* d = (Module*)module;
+  timeout_flag[index] = READ_ACK_OK;
+//  if (jointCb[index]) {
+//    timeout_flag = 1;
+//    jointCb[index]((void*)d, args);
+//    jointCb[index] = 0;  // delete callback
+//  }
 
   return 0;
 }
 
-int32_t _onWriteEntry(void* handle, uint8_t index, void* args) {
-  Module* d = (Module*)handle;
-  if(index == TAG_WORK_MODE) {
+//int32_t _onWriteEntry(void* module, uint8_t index, void* args) {
+//  Module* d = (Module*)handle;
+//  if(index == TAG_WORK_MODE) {
 
-  }
-  return 0;
+//  }
+//  return 0;
+//}
+
+int32_t _jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel) {
+  uint32_t buf[2];
+  buf[0] = targetPos;
+  buf[1] = targetVel;
+  writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
 }
 
+int32_t jointPeriodSend(void* tv) {
+  for (int16_t i = 0; i < jointNbr; i++) {
+    _jointSendPVTSync(jointStack[i], 0x11, 0x22);
+  }
+}
 
-Joint* jointInit(uint16_t id, canSend_t canSend) {
+Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
   pJoint->basicModule = (Module*)malloc(sizeof(Module));
   pJoint->basicModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
@@ -310,7 +333,7 @@ Joint* jointInit(uint16_t id, canSend_t canSend) {
   return pJoint;
 }
 
-int32_t jointDestroy(Joint* pJoint) {
+int32_t jointDown(Joint* pJoint) {
   if (pJoint) {
     if (pJoint->basicModule->memoryTable)
       free(pJoint->basicModule->memoryTable);
@@ -325,18 +348,6 @@ int32_t jointDestroy(Joint* pJoint) {
   return -1;
 }
 
-void jointMsgRoute(Joint* pJoint, Message* msg) {
-  canDispatch(pJoint->basicModule, msg);
-}
-
-int32_t jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel) {
-  uint32_t buf[2];
-  buf[0] = targetPos;
-  buf[1] = targetVel;
-  writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
-}
-
-
 void jointStartServo(Joint* pJoint) {
 
 }
@@ -345,32 +356,129 @@ void jointStopServo(Joint* pJoint) {
 
 }
 
+Joint* jointSelect(uint16_t id) {
+  uint16_t i;
+  for (i = 0; i < jointNbr; i++) {
+    if (id == *(jointStack[i]->jointId))
+      return jointStack[i];
+  }
+
+  return NULL;
+}
+
+int32_t delJoint(Joint* pJoint) {
+  uint16_t i;
+  if (!jointNbr) {
+    MSG_ERROR("Joint Stack Underflow");
+    return -2;
+  }
+  if(!pJoint) {
+    MSG_ERROR("Joint is NULL");
+    return -3;
+  }
+
+  for (i = 0; i < jointNbr; i++) {
+    if (pJoint == jointStack[i])
+      break;
+  }
+  for (; i < jointNbr - 1; i++) {
+    jointStack[i] = jointStack[i+1];
+  }
+  jointStack[jointNbr--] = 0;
+  jointDown(pJoint);
+  return 0;
+}
+
+int32_t addJoint(Joint* pJoint) {
+  if (jointNbr >= MAX_JOINTS) {
+    MSG_ERROR("Joint Stack Overflow");
+    return -1;
+  }
+  else {
+    if (pJoint != jointSelect(*(pJoint->jointId)))
+      jointStack[jointNbr++] = pJoint;
+    else return -1;
+  }
+  return 0;
+}
+
+Joint* jointUp(uint16_t id, canSend_t canSend) {
+    int32_t res;
+    Joint* pJoint = jointConstruct(id, canSend);
+    addJoint(pJoint);
+    res = jointGetTypeTimeout(pJoint, 1000);
+    if ((res == 0) && isJointType(*(pJoint->jointType))) {
+        return pJoint;
+    } else {
+        delJoint(pJoint);
+        return NULL;
+    }
+}
+
 
 /// Get Information from Joints
-int32_t jointGetId(Joint* pJoint, jCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_ID, 2, _onReadEntry);
-  jointCb[SYS_ID] = callBack;
+int32_t jointGetId(Joint* pJoint, mCallback_t callBack) {
+  readEntryCallback(pJoint->basicModule, SYS_ID, 2, callBack);
   return 0;
 }
 
-int32_t jointGetType(Joint* pJoint, jCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, _onReadEntry);
-  jointCb[SYS_MODEL_TYPE] = callBack;
+/// waiting for n us, if return 0, id will be stored in pJoint
+int32_t jointGetIdTimeout(Joint* pJoint, int32_t timeout) { //us
+  int16_t i;
+  if (timeout_flag[SYS_ID] == READ_IN_PROGRESS) {
+      //reading in process
+      return -2;
+  }
+  timeout_flag[SYS_ID] = READ_IN_PROGRESS;
+  readEntryCallback(pJoint->basicModule, SYS_ID, 2, _onCommonReadEntry);
+  for (i = 0; i < timeout; i++) {
+      if (timeout_flag[SYS_ID] == READ_ACK_OK) {
+          timeout_flag[SYS_ID] = READ_IDLE;
+          return 0;
+      }
+      delay_us(1);
+  }
+  timeout_flag[SYS_ID] = READ_IDLE;
+  return -1;
+}
+
+
+int32_t jointGetType(Joint* pJoint, mCallback_t callBack) {
+  readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, callBack);
   return 0;
 }
 
-int32_t jointGetVoltage(Joint* pJoint, jCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_VOLTAGE, 2, _onReadEntry);
-  jointCb[SYS_VOLTAGE] = callBack;
+int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout) { //us
+  int16_t i;
+  if (timeout_flag[SYS_MODEL_TYPE] == READ_IN_PROGRESS) {
+      //reading in process
+      return -2;
+  }
+  timeout_flag[SYS_MODEL_TYPE] = READ_IN_PROGRESS;
+  readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, _onCommonReadEntry);
+  for (i = 0; i < timeout; i++) {
+      if (timeout_flag[SYS_MODEL_TYPE] == READ_ACK_OK) {
+          timeout_flag[SYS_MODEL_TYPE] = READ_IDLE;
+          return 0;
+      }
+      delay_us(1);
+  }
+  timeout_flag[SYS_MODEL_TYPE] = READ_IDLE;
+  return -1;
+}
+
+int32_t jointGetVoltage(Joint* pJoint, mCallback_t callBack) {
+  readEntryCallback(pJoint->basicModule, SYS_VOLTAGE, 2, callBack);
   return 0;
 }
 
 /// Set Value to Joints
-int32_t jointSetMode(Joint* pJoint, uint16_t mode) {
+int32_t jointSetMode(Joint* pJoint, uint16_t mode,  mCallback_t callBack) {
   if (isJointMode(mode)) {
-    writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, _onReadEntry);
+    writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, callBack);
     return 0;
   }
   return -1;
 }
+
 
