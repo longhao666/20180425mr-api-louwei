@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "joint.h"
 
 #define CMDMAP_LEN            160    //ÄÚ´æ¿ØÖÆ±í×Ü³¤¶È£¨°ë×Öµ¥Î»16bits£©
@@ -127,11 +128,6 @@
 #define SCP_MEAPOS_L          0x9C    //实际位置数据集
 #define SCP_MEAPOS_H          0x9D    //实际位置数据集
 
-//波特率宏定义
-#define BAUD_CAN_250000     0x0000    //250K
-#define BAUD_CAN_500000     0x0001    //500K
-#define BAUD_CAN_1000000    0x0002    //1M
-
 //示波器记录对象MASK定义
 #define MASK_TAGCUR         0x0001    //记录目标电流MASK
 #define MASK_MEACUR         0x0002    //记录实际电流MASK
@@ -140,156 +136,159 @@
 #define MASK_TAGPOS         0x0010    //记录目标位置MASK
 #define MASK_MEAPOS         0x0020    //记录实际位置MASK
 
+//内存控制表读写权限
 const uint8_t joint_accessType[10][16] = 
 {
-  {//0x0*×Ö¶Î
-    RO,     //×ÖÍ·
-    RW,     //Çý¶¯Æ÷ID
-    RO,     //Çý¶¯Æ÷ÐÍºÅ
-    RO,     //¹Ì¼þ°æ±¾
-    RO,     //´íÎó´úÂë
-    RO,     //ÏµÍ³µçÑ¹
-    RO,     //ÏµÍ³ÎÂ¶È
-    RO,     //Ä£¿é¼õËÙ±È
-    RW,     //232¶Ë¿Ú²¨ÌØÂÊ£¨±¾°æ±¾ÒÑÒÆ³ý£©
-    RW,     //CAN×ÜÏß²¨ÌØÂÊ
-    RW,     //Ê¹ÄÜÇý¶¯Æ÷±êÖ¾
-    RW,     //ÉÏµçÊ¹ÄÜÇý¶¯Æ÷±êÖ¾
-    RW,     //±£´æÊý¾Ýµ½Flash±êÖ¾
-    RW,     //×Ô¶¯±ê¶¨¾ø¶ÔÎ»ÖÃ±êÖ¾£¨±¾°æ±¾ÒÑÒÆ³ý£©
-    RW,     //½«µ±Ç°Î»ÖÃÉèÖÃÎªÁãµã±êÖ¾
-    RW,     //Çå³ý´íÎó±êÖ¾
-  },
-  {//0x1*×Ö¶Î
-    RO,     //µ±Ç°µçÁ÷µÍ16Î»£¨mA£©
-    RO,     //µ±Ç°µçÁ÷¸ß16Î»£¨mA£©
-    RO,     //µ±Ç°ËÙ¶ÈµÍ16Î»£¨units/s£©
-    RO,     //µ±Ç°ËÙ¶È¸ß16Î»£¨units/s£©
-    RO,     //µ±Ç°Î»ÖÃµÍ16Î»£¨units£©
-    RO,     //µ±Ç°Î»ÖÃ¸ß16Î»£¨units£©
-    NO_ACCESS,      //Êý×ÖµçÎ»Æ÷Öµ£¨±¾°æ±¾ÒÑÒÆ³ý£©
-    RO,     //ÁãµãÎ»ÖÃÆ«ÒÆÁ¿µÍ16Î»£¨units£©
-    RO,     //ÁãµãÎ»ÖÃÆ«ÒÆÁ¿¸ß16Î»£¨units£©
-  },
-  {//0x2*×Ö¶Î
-    RO,     //µç»úÄÚ×è
-    RO,     //µç»úµç¸Ð
-    RO,     //µç»ú¶î¶¨µçÑ¹
-    RO,     //µç»ú¶î¶¨µçÁ÷
-    NO_ACCESS,      //ÂëÅÌÏßÊý£¨±¾°æ±¾ÒÑÒÆ³ý£©
-    NO_ACCESS,      //µ±Ç°»ô¶û×´Ì¬£¨±¾°æ±¾ÒÑÒÆ³ý£©
-    RO,      //¾ø¶Ô±àÂëÆ÷µ¥È¦Êý¾Ý
-    RO,      //¾ø¶Ô±àÂëÆ÷¶àÈ¦Êý¾Ý
-    RO,      //¶àÈ¦×´Ì¬ÐÅÏ¢
-    RO,      //µç³ØµçÑ¹
-    RO,      //X
-    RO,      //Y
-    RO,      //Z
-  },
-  {//0x3*×Ö¶Î
-    RW,     //¹¤×÷Ä£Ê½£¬0-¿ª»·£¬1-µçÁ÷Ä£Ê½£¬2-ËÙ¶ÈÄ£Ê½£¬3-Î»ÖÃÄ£Ê½
-    RW,     //¿ª»·Ä£Ê½ÏÂÕ¼¿Õ±È£¨0~100£©
-    RW,     //Ä¿±êµçÁ÷µÍ16Î»£¨mA£©
-    RW,     //Ä¿±êµçÁ÷¸ß16Î»£¨mA£©
-    RW,     //Ä¿±êËÙ¶ÈµÍ16Î»£¨units/s£©
-    RW,     //Ä¿±êËÙ¶È¸ß16Î»£¨units/s£©
-    RW,     //Ä¿±êÎ»ÖÃµÍ16Î»£¨units£©
-    RW,     //Ä¿±êÎ»ÖÃ¸ß16Î»£¨units£©
-  },
-  {//0x4*×Ö¶Î
-    RW,     //×î´óµçÁ÷£¨mA£©
-    RW,     //×î´óËÙ¶È£¨rpm£©
-    RW,     //×î´ó¼ÓËÙ¶È£¨rpm/s£©
-    RW,     //×îÐ¡Î»ÖÃµÍ16Î»£¨units£©
-    RW,     //×îÐ¡Î»ÖÃ¸ß16Î»£¨units£©
-    RW,     //×î´óÎ»ÖÃµÍ16Î»£¨units£©
-    RW,     //×î´óÎ»ÖÃ¸ß16Î»£¨units£©
-  },
-  {//0x5*×Ö¶Î
-    RW,     //Èý±Õ»·²ÎÊýËø¶¨±êÖ¾
-    RW,     //µçÁ÷»·P²ÎÊý
-    RW,     //µçÁ÷»·I²ÎÊý
-    RW,     //µçÁ÷»·D²ÎÊý
-    RW,     //ËÙ¶È»·P²ÎÊý
-    RW,     //ËÙ¶È»·I²ÎÊý
-    RW,     //ËÙ¶È»·D²ÎÊý
-    RW,     //ËÙ¶ÈËÀÇø
-    RW,     //Î»ÖÃ»·P²ÎÊý
-    RW,     //Î»ÖÃ»·I²ÎÊý
-    RW,     //Î»ÖÃ»·D²ÎÊý
-    RW,     //Î»ÖÃËÀÇø
-    RW,     //µçÁ÷Ç°À¡
-    RW,     //µçÁ÷Ç°À¡
-    RW,     //µçÁ÷Ç°À¡
-  },
-  {//0x6*×Ö¶Î
-    NO_ACCESS,      //
-    RW,     //µçÁ÷»·P²ÎÊý
-    RW,     //µçÁ÷»·I²ÎÊý
-    RW,     //µçÁ÷»·D²ÎÊý
-    RW,     //ËÙ¶È»·P²ÎÊý
-    RW,     //ËÙ¶È»·I²ÎÊý
-    RW,     //ËÙ¶È»·D²ÎÊý
-    RW,     //ËÙ¶ÈËÀÇø
-    RW,     //Î»ÖÃ»·P²ÎÊý
-    RW,     //Î»ÖÃ»·I²ÎÊý
-    RW,     //Î»ÖÃ»·D²ÎÊý
-    RW,     //Î»ÖÃËÀÇø
-  },
-  {//0x7*×Ö¶Î
-    NO_ACCESS,      //
-    RW,     //µçÁ÷»·P²ÎÊý
-    RW,     //µçÁ÷»·I²ÎÊý
-    RW,     //µçÁ÷»·D²ÎÊý
-    RW,     //ËÙ¶È»·P²ÎÊý
-    RW,     //ËÙ¶È»·I²ÎÊý
-    RW,     //ËÙ¶È»·D²ÎÊý
-    RW,     //ËÙ¶ÈËÀÇø
-    RW,     //Î»ÖÃ»·P²ÎÊý
-    RW,     //Î»ÖÃ»·I²ÎÊý
-    RW,     //Î»ÖÃ»·D²ÎÊý
-    RW,     //Î»ÖÃËÀÇø
-  },
-  {//0x8*×Ö¶Î
-    RW,     //É²³µÊÍ·ÅÃüÁî
-    RO,     //É²³µ×´Ì¬
-  },
-  {//0x9*×Ö¶Î
-    RW,     //¼ÇÂ¼¶ÔÏó±êÖ¾MASK
-    RW,     //´¥·¢Ô´£¬0Îª¿ª»·´¥·¢£¬1ÎªµçÁ÷´¥·¢£¬2ÎªËÙ¶È´¥·¢£¬3ÎªÎ»ÖÃ´¥·¢£¬4ÎªÓÃ»§´¥·¢
-    RW,     //´¥·¢·½Ê½£¬0ÎªÉÏÉýÑØ£¬1ÎªÏÂ½µÑØ£¬2ÎªÁ¬Ðø²ÉÑù
-    RW,     //ÓÃ»§´¥·¢±êÖ¾
-    RW,     //¼ÇÂ¼Ê±¼ä¼ä¸ô£¨¶Ô10kHZµÄ·ÖÆµÖµ£©
-    RW,     //¼ÇÂ¼Ê±¼äÆ«ÖÃ£¨Ä¬ÈÏÒÔÐÅºÅ¹ýÁãµãÊ±¿Ì¡À50´ÎÊý¾Ý£©
-    RO,     //Ä¿±êµçÁ÷Êý¾Ý¼¯
-    RO,     //Êµ¼ÊµçÁ÷Êý¾Ý¼¯
-    RO,     //Ä¿±êËÙ¶ÈÊý¾Ý¼¯
-    RO,     //Êµ¼ÊËÙ¶ÈÊý¾Ý¼¯
-    RO,     //Ä¿±êÎ»ÖÃÊý¾Ý¼¯
-    RO,     //Êµ¼ÊÎ»ÖÃÊý¾Ý¼¯
-  },
+    {//0x0*字段
+        RO,			//字头
+        RW,			//驱动器ID
+        RO,			//驱动器型号
+        RO,			//固件版本
+        RO,			//错误代码
+        RO,			//系统电压
+        RO,			//系统温度
+        RO,			//模块减速比
+        RW,			//232端口波特率（本版本已移除）
+        RW,			//CAN总线波特率
+        RW,			//使能驱动器标志
+        RW,			//上电使能驱动器标志
+        RW,			//保存数据到Flash标志
+        RW,			//自动标定绝对位置标志（本版本已移除）
+        RW,			//将当前位置设置为零点标志
+        RW,			//清除错误标志
+    },
+    {//0x1*字段
+        RO,			//当前电流低16位（mA）
+        RO,			//当前电流高16位（mA）
+        RO,			//当前速度低16位（units/s）
+        RO,			//当前速度高16位（units/s）
+        RO,			//当前位置低16位（units）
+        RO,			//当前位置高16位（units）
+        NO_ACCESS,			//数字电位器值（本版本已移除）
+        RO,			//零点位置偏移量低16位（units）
+        RO,			//零点位置偏移量高16位（units）
+    },
+    {//0x2*字段
+        RO,			//电机内阻
+        RO,			//电机电感
+        RO,			//电机额定电压
+        RO,			//电机额定电流
+        NO_ACCESS,			//码盘线数（本版本已移除）
+        NO_ACCESS,			//当前霍尔状态（本版本已移除）
+        RO,      //绝对编码器单圈数据
+        RO,      //绝对编码器多圈数据
+        RO,      //多圈状态信息
+        RO,      //电池电压
+        RO,      //X
+        RO,      //Y
+        RO,      //Z
+    },
+    {//0x3*字段
+        RW,			//工作模式，0-开环，1-电流模式，2-速度模式，3-位置模式
+        RW,			//开环模式下占空比（0~100）
+        RW,			//目标电流低16位（mA）
+        RW,			//目标电流高16位（mA）
+        RW,			//目标速度低16位（units/s）
+        RW,			//目标速度高16位（units/s）
+        RW,			//目标位置低16位（units）
+        RW,			//目标位置高16位（units）
+    },
+    {//0x4*字段
+        RW,			//最大电流（mA）
+        RW,			//最大速度（rpm）
+        RW,			//最大加速度（rpm/s）
+        RW,			//最小位置低16位（units）
+        RW,			//最小位置高16位（units）
+        RW,			//最大位置低16位（units）
+        RW,			//最大位置高16位（units）
+    },
+    {//0x5*字段
+        RW,			//三闭环参数锁定标志
+        RW,			//电流环P参数
+        RW,			//电流环I参数
+        RW,			//电流环D参数
+        RW,			//速度环P参数
+        RW,			//速度环I参数
+        RW,			//速度环D参数
+        RW,			//速度死区
+        RW,			//位置环P参数
+        RW,			//位置环I参数
+        RW,			//位置环D参数
+        RW,			//位置死区
+        RW,			//电流前馈
+        RW,			//电流前馈
+        RW,			//电流前馈
+    },
+    {//0x6*字段
+        NO_ACCESS,			//
+        RW,			//电流环P参数
+        RW,			//电流环I参数
+        RW,			//电流环D参数
+        RW,			//速度环P参数
+        RW,			//速度环I参数
+        RW,			//速度环D参数
+        RW,			//速度死区
+        RW,			//位置环P参数
+        RW,			//位置环I参数
+        RW,			//位置环D参数
+        RW,			//位置死区
+    },
+    {//0x7*字段
+        NO_ACCESS,			//
+        RW,			//电流环P参数
+        RW,			//电流环I参数
+        RW,			//电流环D参数
+        RW,			//速度环P参数
+        RW,			//速度环I参数
+        RW,			//速度环D参数
+        RW,			//速度死区
+        RW,			//位置环P参数
+        RW,			//位置环I参数
+        RW,			//位置环D参数
+        RW,			//位置死区
+    },
+    {//0x8*字段
+        RW,			//刹车释放命令
+        RO,			//刹车状态
+    },
+    {//0x9*字段
+        RW,			//记录对象标志MASK
+        RW,			//触发源，0为开环触发，1为电流触发，2为速度触发，3为位置触发，4为用户触发
+        RW,			//触发方式，0为上升沿，1为下降沿，2为连续采样
+        RW,			//用户触发标志
+        RW,			//记录时间间隔（对10kHZ的分频值）
+        RW,			//记录时间偏置（默认以信号过零点时刻±50次数据）
+        RO,			//目标电流数据集
+        RO,			//实际电流数据集
+        RO,			//目标速度数据集
+        RO,			//实际速度数据集
+        RO,			//目标位置数据集
+        RO,			//实际位置数据集
+    },
 };
 
-int32_t addJoint(Joint* pJoint);
-int32_t delJoint(Joint* pJoint);
+#define CMD_IN_PROGRESS -1
+#define CMD_ACK_OK 1
+#define CMD_IDLE 0
 
 //jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
 Joint* jointStack[MAX_JOINTS];    // online joint stack
 uint16_t jointNbr = 0;
-int16_t timeout_flag[CMDMAP_LEN] = {0};
+int16_t rx_flag[CMDMAP_LEN] = {CMD_IDLE};
+int16_t tx_flag[CMDMAP_LEN] = {CMD_IDLE};
 
-#define READ_IN_PROGRESS -1
-#define READ_ACK_OK 1
-#define READ_IDLE 0
+
 // callback of read command
 int32_t _onCommonReadEntry(void* module, uint8_t index, void* args) {
   Module* d = (Module*)module;
-  timeout_flag[index] = READ_ACK_OK;
-//  if (jointCb[index]) {
-//    timeout_flag = 1;
-//    jointCb[index]((void*)d, args);
-//    jointCb[index] = 0;  // delete callback
-//  }
+  rx_flag[index] = CMD_ACK_OK;
+
+  return 0;
+}
+
+int32_t _onCommonWriteEntry(void* module, uint8_t index, void* args) {
+  Module* d = (Module*)module;
+  tx_flag[index] = CMD_ACK_OK;
 
   return 0;
 }
@@ -301,23 +300,48 @@ int32_t _onCommonReadEntry(void* module, uint8_t index, void* args) {
 //  }
 //  return 0;
 //}
+int32_t jointPush(Joint* pJoint, uint8_t* buf) {
+    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
+        return -1;
+    }
+    memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
+    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
+    return 0;
+}
 
-int32_t _jointSendPVTSync(Joint* pJoint, uint32_t targetPos, uint32_t targetVel) {
-  uint32_t buf[2];
-  buf[0] = targetPos;
-  buf[1] = targetVel;
-  writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+int32_t jointPoll(Joint* pJoint, uint8_t* buf) {
+    uint16_t len = (pJoint->txQueRear+MAX_BUFS - pJoint->txQueFront)%MAX_BUFS;
+    if (len < WARNING_BUFS) {
+        if (pJoint->jointBufUnderflowHandler)
+            pJoint->jointBufUnderflowHandler(pJoint, len);
+        else return -1; //Sevo stopped
+    }
+    if (len == 0) {//empty
+        return -1;
+    }
+    memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
+    pJoint->txQueFront = (pJoint->txQueFront+1)%MAX_BUFS;
+    return 0;
+}
+
+int32_t _jointSendPVTSync(Joint* pJoint) {
+  uint8_t buf[8];
+
+  if (jointPoll(pJoint, buf) == 0)
+      writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
 }
 
 int32_t jointPeriodSend(void* tv) {
   for (int16_t i = 0; i < jointNbr; i++) {
-    _jointSendPVTSync(jointStack[i], 0x11, 0x22);
+    _jointSendPVTSync(jointStack[i]);
   }
 }
 
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
+  uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_SPEED_L, SYS_SPEED_H};
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
   pJoint->basicModule = (Module*)malloc(sizeof(Module));
+  pJoint->basicModule->memoryLen = CMDMAP_LEN;
   pJoint->basicModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
   pJoint->basicModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
   pJoint->basicModule->writeDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
@@ -330,10 +354,18 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
 
   pJoint->jointType = (uint16_t*)&(pJoint->basicModule->memoryTable[SYS_MODEL_TYPE]);
 
+  pJoint->isOnline = JOINT_OFFLINE;
+  pJoint->txQueFront = 0;
+  pJoint->txQueRear = 0;
+  memset((void*)(pJoint->txQue), 0, sizeof(rec_t)*MAX_BUFS);
+  pJoint->jointBufUnderflowHandler = NULL;
+
+  setSyncReceiveMap(pJoint->basicModule, indexMap);
+
   return pJoint;
 }
 
-int32_t jointDown(Joint* pJoint) {
+int32_t jointDestruct(Joint* pJoint) {
   if (pJoint) {
     if (pJoint->basicModule->memoryTable)
       free(pJoint->basicModule->memoryTable);
@@ -348,12 +380,14 @@ int32_t jointDown(Joint* pJoint) {
   return -1;
 }
 
-void jointStartServo(Joint* pJoint) {
+void jointStartServo(Joint* pJoint, jointBufHandler_t handler) {
+    if (pJoint)
+        pJoint->jointBufUnderflowHandler = handler;
 
 }
 
 void jointStopServo(Joint* pJoint) {
-
+    pJoint->jointBufUnderflowHandler = NULL;
 }
 
 Joint* jointSelect(uint16_t id) {
@@ -366,7 +400,7 @@ Joint* jointSelect(uint16_t id) {
   return NULL;
 }
 
-int32_t delJoint(Joint* pJoint) {
+int32_t jointDown(Joint* pJoint) {
   uint16_t i;
   if (!jointNbr) {
     MSG_ERROR("Joint Stack Underflow");
@@ -384,33 +418,28 @@ int32_t delJoint(Joint* pJoint) {
   for (; i < jointNbr - 1; i++) {
     jointStack[i] = jointStack[i+1];
   }
-  jointStack[jointNbr--] = 0;
-  jointDown(pJoint);
-  return 0;
-}
-
-int32_t addJoint(Joint* pJoint) {
-  if (jointNbr >= MAX_JOINTS) {
-    MSG_ERROR("Joint Stack Overflow");
-    return -1;
-  }
-  else {
-    if (pJoint != jointSelect(*(pJoint->jointId)))
-      jointStack[jointNbr++] = pJoint;
-    else return -1;
-  }
+  jointStack[jointNbr--] = NULL;
+  jointDestruct(pJoint);
   return 0;
 }
 
 Joint* jointUp(uint16_t id, canSend_t canSend) {
     int32_t res;
     Joint* pJoint = jointConstruct(id, canSend);
-    addJoint(pJoint);
+    if (jointNbr >= MAX_JOINTS) {
+      MSG_ERROR("Joint Stack Overflow");
+      return NULL;
+    } else {
+      if (pJoint != jointSelect(*(pJoint->jointId)))
+        jointStack[jointNbr++] = pJoint; // push into stack
+      else return pJoint; // already in the stack
+    }
     res = jointGetTypeTimeout(pJoint, 1000);
     if ((res == 0) && isJointType(*(pJoint->jointType))) {
         return pJoint;
     } else {
-        delJoint(pJoint);
+        jointStack[jointNbr--] = NULL; // delete from stack
+        jointDestruct(pJoint);
         return NULL;
     }
 }
@@ -425,20 +454,20 @@ int32_t jointGetId(Joint* pJoint, mCallback_t callBack) {
 /// waiting for n us, if return 0, id will be stored in pJoint
 int32_t jointGetIdTimeout(Joint* pJoint, int32_t timeout) { //us
   int16_t i;
-  if (timeout_flag[SYS_ID] == READ_IN_PROGRESS) {
+  if (rx_flag[SYS_ID] == CMD_IN_PROGRESS) {
       //reading in process
       return -2;
   }
-  timeout_flag[SYS_ID] = READ_IN_PROGRESS;
+  rx_flag[SYS_ID] = CMD_IN_PROGRESS;
   readEntryCallback(pJoint->basicModule, SYS_ID, 2, _onCommonReadEntry);
   for (i = 0; i < timeout; i++) {
-      if (timeout_flag[SYS_ID] == READ_ACK_OK) {
-          timeout_flag[SYS_ID] = READ_IDLE;
+      if (rx_flag[SYS_ID] == CMD_ACK_OK) {
+          rx_flag[SYS_ID] = CMD_IDLE;
           return 0;
       }
       delay_us(1);
   }
-  timeout_flag[SYS_ID] = READ_IDLE;
+  rx_flag[SYS_ID] = CMD_IDLE;
   return -1;
 }
 
@@ -450,20 +479,20 @@ int32_t jointGetType(Joint* pJoint, mCallback_t callBack) {
 
 int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout) { //us
   int16_t i;
-  if (timeout_flag[SYS_MODEL_TYPE] == READ_IN_PROGRESS) {
+  if (rx_flag[SYS_MODEL_TYPE] == CMD_IN_PROGRESS) {
       //reading in process
       return -2;
   }
-  timeout_flag[SYS_MODEL_TYPE] = READ_IN_PROGRESS;
+  rx_flag[SYS_MODEL_TYPE] = CMD_IN_PROGRESS;
   readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, _onCommonReadEntry);
   for (i = 0; i < timeout; i++) {
-      if (timeout_flag[SYS_MODEL_TYPE] == READ_ACK_OK) {
-          timeout_flag[SYS_MODEL_TYPE] = READ_IDLE;
+      if (rx_flag[SYS_MODEL_TYPE] == CMD_ACK_OK) {
+          rx_flag[SYS_MODEL_TYPE] = CMD_IDLE;
           return 0;
       }
       delay_us(1);
   }
-  timeout_flag[SYS_MODEL_TYPE] = READ_IDLE;
+  rx_flag[SYS_MODEL_TYPE] = CMD_IDLE;
   return -1;
 }
 
@@ -478,6 +507,25 @@ int32_t jointSetMode(Joint* pJoint, uint16_t mode,  mCallback_t callBack) {
     writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, callBack);
     return 0;
   }
+  return -1;
+}
+
+int32_t jointSetModeTimeout(Joint* pJoint, uint16_t mode, int32_t timeout) { //us
+  int16_t i;
+  if (tx_flag[TAG_WORK_MODE] == CMD_IN_PROGRESS) {
+      //reading in process
+      return -2;
+  }
+  tx_flag[TAG_WORK_MODE] = CMD_IN_PROGRESS;
+  writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, _onCommonWriteEntry);
+  for (i = 0; i < timeout; i++) {
+      if (tx_flag[TAG_WORK_MODE] == CMD_ACK_OK) {
+          tx_flag[TAG_WORK_MODE] = CMD_IDLE;
+          return 0;
+      }
+      delay_us(1);
+  }
+  tx_flag[TAG_WORK_MODE] = CMD_IDLE;
   return -1;
 }
 

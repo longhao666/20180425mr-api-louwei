@@ -5,15 +5,12 @@
 #include <unistd.h>
 #include "master.h"
 
-void timer1ms(void* curTime) {
-    static int cnt = 0;
-    struct timeval* tv = (struct timeval*) curTime;
-    // MSG("1ms");
-    if (tv) {
-        MSG("cnt:%5d\t", cnt++);
-        MSG("tv_sec:%ld\t", tv->tv_sec);
-        MSG("tv_usec:%ld\n", tv->tv_usec);
-    }
+int32_t fillbuf(void* handle, uint16_t len) {
+    uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint16_t i;
+    Joint* p = (Joint*)handle;
+    for (i = len; i < MAX_BUFS; i++)
+        jointPush(p, buf);
 }
 
 // the signal handler for manual break Ctrl-C
@@ -34,7 +31,15 @@ int main(int argc, char const *argv[])
     startMaster();
     MSG("Master Started.\n");
     
+    setControlLoopFreq(200);
     joint1 = jointUp(0x01, can1Send);
+    if (joint1) {
+        if (jointSetModeTimeout(joint1, MODE_CYCLESYNC, 1000) == 0){
+            MSG("Set mode to speed loop.\n");
+        }
+        jointStartServo(joint1, fillbuf);
+    }
+//    jointStopServo(joint1);
 
     joinMaster();
     return 0;

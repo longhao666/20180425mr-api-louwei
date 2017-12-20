@@ -1,14 +1,15 @@
 #include <string.h>
 #include "module.h"
 
-int32_t registerSetEntryCallback(Module* d, uint8_t index, mCallback_t callBack) {
+
+int32_t registerReadCallback(Module* d, uint8_t index, mCallback_t callBack) {
   d->readDoneCb[index] = callBack;
   return 0;
 }
 
 int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData) {
   Message txMsg = Message_Initializer;
-  txMsg.cob_id = *d->moduleId + prefix;
+  txMsg.cob_id = *(d->moduleId) + prefix;
   txMsg.rtr = 0;
   txMsg.len = 8;
   memcpy((void*)(txMsg.data), pSourceData, 8);
@@ -74,10 +75,19 @@ int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_
   return 0;
 }
 
+int32_t setSyncReceiveMap(Module* d, uint16_t index[4]) {
+    memcpy(d->syncReceiveIndex, index, 4*sizeof(uint16_t));
+    return 0;
+}
 
 int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestData)
 {
-  uint16_t i;
+  if (index >= d->memoryLen) {
+      return -1;
+  }
+  if (d->accessType[index] == NO_ACCESS ) {
+      return -1;
+  }
   memcpy((void*)&(d->memoryTable[index]), pDestData, dataType);
   while(dataType) {
     if (d->readDoneCb[index]) {
@@ -124,7 +134,11 @@ void canDispatch(Module *d, Message *msg)
       }
     }
     break;
-    case 0x2:
+    case 0x3:
+      _setLocalEntry(d, d->syncReceiveIndex[0], 2, (void*)&(msg->data[0]));
+      _setLocalEntry(d, d->syncReceiveIndex[1], 2, (void*)&(msg->data[2]));
+      _setLocalEntry(d, d->syncReceiveIndex[2], 2, (void*)&(msg->data[4]));
+      _setLocalEntry(d, d->syncReceiveIndex[3], 2, (void*)&(msg->data[6]));
     break;
 
     default:

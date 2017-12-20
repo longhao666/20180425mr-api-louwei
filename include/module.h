@@ -28,9 +28,11 @@ typedef struct td_module
     uint16_t*  moduleId;
     canSend_t canSend;
     uint16_t* memoryTable;
+    uint16_t memoryLen;
     uint8_t* accessType;
     mCallback_t* readDoneCb;
     mCallback_t* writeDoneCb;
+    uint16_t syncReceiveIndex[4];
 }Module;
 
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack);
@@ -38,6 +40,6 @@ int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t 
 int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData);
 int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataType);
 
-int32_t registerSetEntryCallback(Module* d, uint8_t index, mCallback_t callBack);
-
+int32_t registerReadCallback(Module* d, uint8_t index, mCallback_t callBack);
+int32_t setSyncReceiveMap(Module* d, uint16_t index[4]);
 #endif

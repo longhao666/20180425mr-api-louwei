@@ -24,7 +24,7 @@ uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m);
 
 void setTimerInterval(uint32_t t);
 // int32_t setTimerCb_driver(uint8_t ms, void* timerPtr);
-void StartTimerLoop(int16_t hz, void* periodCall);
+void StartTimerLoop(int32_t hz, void* periodCall);
 void StopTimerLoop(void);
 
 #endif

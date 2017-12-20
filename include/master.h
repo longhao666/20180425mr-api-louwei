@@ -13,5 +13,5 @@ uint8_t can2Send(Message* msg);
 int32_t startMaster(void);
 int32_t stopMaster(void);
 int32_t joinMaster(void);
-int32_t setControlLoopFreq(uint16_t hz);
+int32_t setControlLoopFreq(int32_t hz);
 #endif

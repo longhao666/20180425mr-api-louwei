@@ -30,7 +30,7 @@ void _canReadISR(Message* msg) {
 
   // assume module is a joint
   Joint* pJoint = jointSelect(id);
-  if (pJoint->basicModule)
+  if (pJoint && pJoint->basicModule)
       canDispatch(pJoint->basicModule, msg);
 }
 
@@ -43,7 +43,7 @@ int32_t startMaster(void) {
   // Create and Start thread to read CAN message
   CreateReceiveTask(hCan1, &hReceiveTask1, _canReadISR);
 
-  StartTimerLoop(200, jointPeriodSend);
+  StartTimerLoop(-1, jointPeriodSend);
 
   return 0;
 }
@@ -58,8 +58,11 @@ int32_t joinMaster(void) {
   WaitReceiveTaskEnd(&hReceiveTask1);
 }
 
-int32_t setControlLoopFreq(uint16_t hz) {
-  float val = 1000000.0/(float)hz;
+int32_t setControlLoopFreq(int32_t hz) {
+  float val = 0;
+  if (hz != -1) {
+      val = 1000000.0/(float)hz;
+  }
   setTimerInterval(round(val));
   return 0;
 }

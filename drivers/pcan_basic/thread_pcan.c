@@ -53,6 +53,7 @@ void LeaveMutex(void)
 
 void setTimerInterval(uint32_t t) {
     timerVal = t;
+    setTimer(timerVal);
 }
 
 // int32_t setTimerCb_driver(uint8_t ms, void* timerPtr) {
@@ -77,10 +78,12 @@ void timer_notify(sigval_t val)
     // LeaveMutex();
 }
 
-void StartTimerLoop(int16_t hz, void* periodCall)
+void StartTimerLoop(int32_t hz, void* periodCall)
 {
     struct sigevent sigev;
-    float val = 1000000.0/(float)hz;
+    float val;
+    if (hz == 0) val = 0.0f;
+    else val = 1000000.0/(float)hz;
 
     // Take first absolute time ref.
     if(gettimeofday(&last_sig,NULL)){
@@ -98,9 +101,9 @@ void StartTimerLoop(int16_t hz, void* periodCall)
     if(timer_create (CLOCK_REALTIME, &sigev, &timer)) {
         perror("timer_create()");
     }
-    setTimerInterval(round(val));
-
-    setTimer(timerVal);
+    //setTimerInterval(round(val));
+    //timerVal = round(val);
+    setTimer(round(val));
 }
 
 void StopTimerLoop(void)//TimerCallback_t exitfunction)
