@@ -35,6 +35,11 @@ typedef struct td_module
     uint16_t syncReceiveIndex[4];
 }Module;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack);
 int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t dataType, mCallback_t callBack);
 int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData);
@@ -42,4 +47,8 @@ int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataTy
 
 int32_t registerReadCallback(Module* d, uint8_t index, mCallback_t callBack);
 int32_t setSyncReceiveMap(Module* d, uint16_t index[4]);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -268,8 +268,8 @@ const uint8_t joint_accessType[10][16] =
 };
 
 #define CMD_IN_PROGRESS -1
-#define CMD_ACK_OK 1
-#define CMD_IDLE 0
+#define CMD_ACK_OK      1
+#define CMD_IDLE        0
 
 //jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
 Joint* jointStack[MAX_JOINTS];    // online joint stack

@@ -56,6 +56,10 @@ typedef struct td_joint
     jointBufHandler_t jointBufUnderflowHandler;
 }Joint;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 Joint*  jointUp(uint16_t id, canSend_t canSend); //construct Joint and put it in joint stack
 int32_t jointDown(Joint* pJoint);          //destruct joint and remove it from joint stack
 Joint*  jointSelect(uint16_t id);  //find joint by it's ID
@@ -76,5 +80,9 @@ int32_t jointGetIdTimeout(Joint* pJoint, int32_t timeout);
 int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout);
 
 int32_t jointSetModeTimeout(Joint* pJoint, uint16_t mode, int32_t timeout);
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 
