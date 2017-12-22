@@ -1,5 +1,5 @@
 #include <math.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include "master.h"
 
 #define UNUSED(arg) (void)arg
@@ -56,6 +56,7 @@ int32_t stopMaster(void) {
 
 int32_t joinMaster(void) {
   WaitReceiveTaskEnd(&hReceiveTask1);
+  DestroyReceiveTask(&hReceiveTask1);
 }
 
 int32_t setControlLoopFreq(int32_t hz) {

@@ -7,7 +7,7 @@
 #define WARNING_BUFS 20
 
 #define JOINT_OFFLINE 0
-#define JOINT_ONLINE 0
+#define JOINT_ONLINE 1
 
 //模块类型宏定义
 #define MODEL_TYPE_M14        0x010

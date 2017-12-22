@@ -3,15 +3,23 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#if defined Linux
 #include <unistd.h>
+#include <pthread.h>
+#include <sys/time.h>
+#elif defined _WINDOWS
+#include <Windows.h>
+#endif
 
 #define DEBUG_MSG_CONSOLE_ON
 // #define DEBUG_MSG_CONSOLE_OFF
 
 #define delay_us(n) usleep(n)
-#define MSG   printf
-#define MSG_WARN(str) printf("Warning: %s\n", str)
-#define MSG_ERROR(str) printf("Error: %s\n", str)
+#define MSG(...)   printf(__VA_ARGS__)
+#define MSG_WARN(...) do{MSG("Warning: ");MSG(__VA_ARGS__);}while(0);
+#define MSG_ERROR(...) do{MSG("Error: ");MSG(__VA_ARGS__);}while(0);
+
+#define TASK_HANDLE HANDLE
 
 /** 
  * @brief The CAN message structure 

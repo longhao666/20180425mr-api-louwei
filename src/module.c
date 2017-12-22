@@ -94,7 +94,7 @@ int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestDa
       d->readDoneCb[index](d, index, pDestData);
     }
     dataType -= 2;
-    pDestData += 2;
+    (uint8_t*)pDestData += 2;
     index += 1;
   }
 }

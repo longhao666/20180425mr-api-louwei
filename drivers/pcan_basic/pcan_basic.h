@@ -1,17 +1,16 @@
 #ifndef __PCAN_BASIC_H__
 #define __PCAN_BASIC_H__
 
-#include <pthread.h> 
-#include <PCANBasic.h>
 #include "can_driver.h"
+#include <PCANBasic.h>
 
 #define TIMEVAL unsigned long long
 #define TIMEVAL_MAX ~(TIMEVAL)0
 #define MS_TO_TIMEVAL(ms) ms*1000L
 #define US_TO_TIMEVAL(us) us
+
 #define CAN_HANDLE TPCANHandle
 
-#define TASK_HANDLE pthread_t
 
 void CreateReceiveTask(CAN_HANDLE fd0, TASK_HANDLE* Thread, void* ReceiveLoopPtr);
 void DestroyReceiveTask(TASK_HANDLE* Thread);

@@ -66,11 +66,16 @@ uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
     ret =  1;
   }
   else if (status != PCAN_ERROR_QRCVEMPTY) {
-    fprintf(stderr,"canReceive_driver (PCANBasic) : error of reading.\n");
-    ret = 0;
+	char errText[256];
+	CAN_GetErrorText(status, 0, errText);
+	fprintf(stderr, "canReceive_driver (PCANBasic) : error of reading. %s\n", errText);
+	ret = 0;
   }
   else {
-    ret = 0;
+	  char errText[256];
+	  CAN_GetErrorText(status, 0, errText);
+	  fprintf(stderr, "canReceive_driver (PCANBasic) : error of reading. %s\n", errText);
+	  ret = 0;
   }
   
   return ret;

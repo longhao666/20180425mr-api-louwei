@@ -13,6 +13,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${${LIB_NAME}_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH    ${${LIB_NAME}_SOURCE_DIR}/lib)
 
 SET(USE_CAN_DRIVER "pcanbasic")
+ADD_DEFINITIONS(-DWin32)
 #ADD_DEFINITIONS(-DXENOMAI)
 #ADD_DEFINITIONS(-DNOT_USE_DYNAMIC_LOADING)
 
@@ -21,12 +22,13 @@ INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/include)
 IF(${USE_CAN_DRIVER} MATCHES "pcanbasic")
 	MESSAGE("using pcanbasic")
 	ADD_DEFINITIONS(-DPCAN_BASIC)
-        FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
+        FIND_LIBRARY(CAN_DRIVER_LIB   NAMES PCANBasic.dll PATHS ${${LIB_NAME}_SOURCE_DIR}/lib/PCANBasic/x64     NO_DEFAULT_PATH)
 	MESSAGE(${CAN_DRIVER_LIB})
 	INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
+        INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/lib/PCANBasic/Include)
 	SET(DRIVER_SRC
 		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
-		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_pcan.c
+                ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_win.c
 	)
 	SET(DRIVER_INCS
 		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.h
@@ -68,9 +70,9 @@ SET(SRCS
 
 ADD_LIBRARY(${LIB_NAME} SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${CAN_DRIVER_LIB})
-TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm)
+#TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm)
 
-ADD_SUBDIRECTORY(./examples/test1 test1)
+#ADD_SUBDIRECTORY(./examples/test1 test1)
 #ADD_EXECUTABLE(test1 ./examples/test1/test1.c ${SRCS})
 #TARGET_LINK_LIBRARIES(test1 ${LIB_NAME})
 
