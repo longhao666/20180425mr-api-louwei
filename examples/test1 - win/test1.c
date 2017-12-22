@@ -9,12 +9,13 @@ int32_t fillbuf(void* handle, uint16_t len) {
     Joint* p = (Joint*)handle;
     for (i = len; i < MAX_BUFS; i++)
         jointPush(p, buf);
+	return 0;
 }
 
 // the signal handler for manual break Ctrl-C
 void signal_handler(int signal)
 {
-    stopMaster();
+    stopMaster(0);
     exit(0);
 }
 
@@ -26,20 +27,20 @@ int main(int argc, char const *argv[])
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    startMaster();
+    startMaster(0);
     MSG("Master Started.\n");
     
     setControlLoopFreq(200);
-    joint1 = jointUp(0x01, can1Send);
+    joint1 = jointUp(0x01, masterLoadSendFunction(0));
     if (joint1) {
-        if (jointSetModeTimeout(joint1, MODE_CYCLESYNC, 1000) == 0){
+        if (jointSetModeTimeout(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
             MSG("Set mode to speed loop.\n");
         }
         jointStartServo(joint1, fillbuf);
     }
 //    jointStopServo(joint1);
 
-    joinMaster();
+    joinMaster(0);
 	system("pause");
     return 0;
 }

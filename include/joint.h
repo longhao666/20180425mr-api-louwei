@@ -41,7 +41,8 @@
 #define isJointMode(t) (t==MODE_OPEN)||(t==MODE_CURRENT)||(t==MODE_SPEED)||(t==MODE_POSITION)||(t==MODE_CYCLESYNC)
 
 typedef uint8_t rec_t[8];
-typedef int32_t (*jointBufHandler_t)(void* handle, uint16_t len);
+typedef int32_t (*jQueShortHandler_t)(void* pJoint, uint16_t len);
+typedef int32_t (*jCallback_t)(uint16_t id, uint8_t index, void* args);
 
 typedef struct td_joint
 {
@@ -53,7 +54,7 @@ typedef struct td_joint
     rec_t txQue[MAX_BUFS];
     uint16_t txQueFront;
     uint16_t txQueRear;
-    jointBufHandler_t jointBufUnderflowHandler;
+    jQueShortHandler_t jointBufUnderflowHandler;
 }Joint;
 
 #ifdef __cplusplus
@@ -64,22 +65,17 @@ Joint*  jointUp(uint16_t id, canSend_t canSend); //construct Joint and put it in
 int32_t jointDown(Joint* pJoint);          //destruct joint and remove it from joint stack
 Joint*  jointSelect(uint16_t id);  //find joint by it's ID
 
-void jointStartServo(Joint* pJoint, jointBufHandler_t handler);
+void jointStartServo(Joint* pJoint, jQueShortHandler_t handler);
 void jointStopServo(Joint* pJoint);
 
 int32_t jointPush(Joint* pJoint, uint8_t* buf);
 int32_t jointPoll(Joint* pJoint, uint8_t* buf);
 
-int32_t jointGetId(Joint* pJoint, mCallback_t callBack);
-int32_t jointGetType(Joint* pJoint, mCallback_t callBack);
-int32_t jointGetVoltage(Joint* pJoint, mCallback_t callBack);
+int32_t jointGetIdTimeout(Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
+int32_t jointGetTypeTimeout(Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
+int32_t jointGetVoltageTimeout(Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
 
-int32_t jointSetMode(Joint* pJoint, uint16_t mode,  mCallback_t callBack);
-
-int32_t jointGetIdTimeout(Joint* pJoint, int32_t timeout);
-int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout);
-
-int32_t jointSetModeTimeout(Joint* pJoint, uint16_t mode, int32_t timeout);
+int32_t jointSetModeTimeout(Joint* pJoint, uint16_t mode, int32_t timeout, jCallback_t callBack);
 
 #ifdef __cplusplus
 }

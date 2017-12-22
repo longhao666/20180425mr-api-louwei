@@ -7,10 +7,6 @@ EXPORTS
 	jointStopServo @5
 	jointPush @6
 	jointPoll @7
-	jointGetId @8
-	jointGetType @9
-	jointGetVoltage @10
-	jointSetMode @11
 	jointGetIdTimeout @12
 	jointGetTypeTimeout @13
 	jointSetModeTimeout @14
@@ -20,3 +16,5 @@ EXPORTS
 	stopMaster @18
 	joinMaster @19
 	setControlLoopFreq @20
+	masterLoadSendFunction @21
+

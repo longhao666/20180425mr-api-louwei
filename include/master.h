@@ -7,17 +7,20 @@
 #elif defined PCAN_BASIC
   #include "pcan_basic.h"
 #endif
+
+#define MAX_CAN_DEVICES 4
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-uint8_t can1Send(Message* msg);
-uint8_t can2Send(Message* msg);
 
-int32_t startMaster(void);
-int32_t stopMaster(void);
-int32_t joinMaster(void);
+int32_t startMaster(uint8_t masterId);
+int32_t stopMaster(uint8_t masterId);
+int32_t joinMaster(uint8_t masterId);
 int32_t setControlLoopFreq(int32_t hz);
+canSend_t masterLoadSendFunction(uint8_t masterId);
+
 #ifdef __cplusplus
 }
 #endif

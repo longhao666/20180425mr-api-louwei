@@ -7,26 +7,19 @@
 int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
-TASK_HANDLE hReceiveTask1;
-TASK_HANDLE hReceiveTask2;
-
 // Max two CAN Ports
-CAN_HANDLE hCan1 = 0;
-CAN_HANDLE hCan2 = 0;
-CAN_HANDLE hCanUsed = 0;
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
+CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
 
-uint8_t can1Send(Message* msg) {
-  return canSend_driver(hCan1, msg);
-}
-
-uint8_t can2Send(Message* msg) {
-  return canSend_driver(hCan2, msg);
-}
+uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg);}
+uint8_t can2Send(Message* msg) { return canSend_driver(hCan[1], msg); }
+uint8_t can3Send(Message* msg) { return canSend_driver(hCan[2], msg); }
+uint8_t can4Send(Message* msg) { return canSend_driver(hCan[3], msg); }
 
 /// CAN read thread or interrupt
 void _canReadISR(Message* msg) {
   uint16_t cob_id = msg->cob_id;
-  uint16_t id = geNodeId(cob_id);
+  uint16_t id = getNodeId(cob_id);
 
   // assume module is a joint
   Joint* pJoint = jointSelect(id);
@@ -34,35 +27,44 @@ void _canReadISR(Message* msg) {
       canDispatch(pJoint->basicModule, msg);
 }
 
-int32_t startMaster(void) {
+int32_t startMaster(uint8_t masterId) {
   // Open and Initiallize CAN Port
-  hCan1 = canOpen_driver("pcan1", "1M");
+  hCan[masterId] = canOpen_driver("pcan1", "1M");
   // Use CAN1 as the device
-  hCanUsed = hCan1;
 
   // Create and Start thread to read CAN message
-  CreateReceiveTask(hCan1, &hReceiveTask1, _canReadISR);
+  CreateReceiveTask(hCan[masterId], &hReceiveTask[masterId], _canReadISR);
 
   StartTimerLoop(-1, jointPeriodSend);
 
   return 0;
 }
 
-int32_t stopMaster(void) {
+int32_t stopMaster(uint8_t masterId) {
   StopTimerLoop();
-  DestroyReceiveTask(&hReceiveTask1);
+  DestroyReceiveTask(&hReceiveTask[masterId]);
   return 0;
 }
 
-int32_t joinMaster(void) {
-  WaitReceiveTaskEnd(&hReceiveTask1);
-  DestroyReceiveTask(&hReceiveTask1);
+canSend_t masterLoadSendFunction(uint8_t masterId) {
+	switch (masterId) {
+	case 0: return can1Send;
+	case 1: return can2Send;
+	case 2: return can3Send;
+	case 3: return can4Send;
+	}
+}
+
+int32_t joinMaster(uint8_t masterId) {
+  WaitReceiveTaskEnd(&hReceiveTask[masterId]);
+  DestroyReceiveTask(&hReceiveTask[masterId]);
+  return 0;
 }
 
 int32_t setControlLoopFreq(int32_t hz) {
   float val = 0;
   if (hz != -1) {
-      val = 1000000.0/(float)hz;
+      val = 1000000.0f/(float)hz;
   }
   setTimerInterval(round(val));
   return 0;

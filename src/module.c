@@ -49,7 +49,8 @@ int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t 
   txMsg.data[1] = index;
   memcpy((void*)&(txMsg.data[2]), pSourceData, dataType);
 
-  d->writeDoneCb[index + dataType/2 - 1] = callBack;
+  // Last index callback is set	
+  d->writeDoneCb[index] = callBack;
 
   d->canSend(&txMsg);
   return 0;
@@ -57,7 +58,7 @@ int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t 
 
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack) {
   if ((d->accessType[index] != RO) && (d->accessType[index]) != RW) {
-    printf("d->accessType[index] = %d\n", d->accessType[index]);
+    MSG("d->accessType[index] = %d\n", d->accessType[index]);
     MSG_ERROR("Read Entry Pemission");
     return -1;
   }
@@ -69,7 +70,7 @@ int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_
   txMsg.data[1] = index;
   txMsg.data[2] = dataType;
 
-  d->readDoneCb[index + dataType/2 - 1] = callBack;
+  d->readDoneCb[index] = callBack;
 
   d->canSend(&txMsg);
   return 0;
@@ -88,6 +89,7 @@ int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestDa
   if (d->accessType[index] == NO_ACCESS ) {
       return -1;
   }
+  // Firstly copy the data to memoryTable
   memcpy((void*)&(d->memoryTable[index]), pDestData, dataType);
   while(dataType) {
     if (d->readDoneCb[index]) {
@@ -102,7 +104,7 @@ int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestDa
 void canDispatch(Module *d, Message *msg)
 {
   uint16_t cob_id = msg->cob_id;
-  uint16_t nodeid = geNodeId(cob_id);
+  uint16_t nodeid = getNodeId(cob_id);
   if (msg->rtr) {
     MSG_WARN("remote frame received");
     return;

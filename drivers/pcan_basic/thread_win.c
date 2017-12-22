@@ -15,6 +15,8 @@ DWORD timebuffer;
 HANDLE timer_thread = NULL;
 volatile int stop_timer=0;
 
+int32_t recTaskInitFlag = 0;
+
 TIMEVAL timerVal = MS_TO_TIMEVAL(1); //default 5ms
 
 void setTimer(TIMEVAL value);
@@ -71,7 +73,9 @@ void StartTimerLoop(int32_t hz, void* periodCall)
 {
 	unsigned long timer_thread_id;
 	LARGE_INTEGER liDueTime;
-    liDueTime.QuadPart = 0;
+	float val = 0;
+	
+	liDueTime.QuadPart = 0;
 
 	stop_timer = 0;
 	canTxPeriodic = periodCall;
@@ -85,6 +89,10 @@ void StartTimerLoop(int32_t hz, void* periodCall)
     timebuffer = GetTickCount();
 
     timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, NULL, 0, &timer_thread_id);
+	if (hz != -1) {
+		val = 1000000.0 / (float)hz;
+	}
+	//setTimerInterval(round(val));
 }
 
 void StopTimerLoop(void)//TimerCallback_t exitfunction)
@@ -110,7 +118,7 @@ void setTimer(TIMEVAL value) //us
 
         /* arg 2 of SetWaitableTimer take 100 ns interval */
         liDueTime.QuadPart = ((long long) (-1) * value * 10);
-        //printf("SetTimer(%llu)\n", value);
+        //MSG("SetTimer(%llu)\n", value);
 
         if (!SetWaitableTimer(timer, &liDueTime, 0, NULL, NULL, FALSE))
         {
@@ -145,10 +153,11 @@ void* canReceiveLoop(void* arg)
         MSG_ERROR("%s",strMsg);
         return NULL;
     }
-
+	//Init FLAG is set to avoid message coming while event hasn't set
+	recTaskInitFlag = 1;
     while (1) {
         if ( WAIT_OBJECT_0 == WaitForSingleObject(hEvent, INFINITE)) {
-			ResetEvent(hEvent);
+			//ResetEvent(hEvent);
             if (canReceive_driver(handle, &rxMsg) == 1) {
                 EnterMutex();
                 if (canRxInterruptISR)
@@ -175,7 +184,9 @@ void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoop
 
     *Thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)canReceiveLoop, (void*)handle, 0, &thread_id);
 
-    MSG("pthread_create()\n");
+	while (recTaskInitFlag != 1);
+
+    MSG("Receive Task created.\n");
 }
 
 void DestroyReceiveTask(TASK_HANDLE* Thread)

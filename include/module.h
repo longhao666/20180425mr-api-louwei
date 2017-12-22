@@ -18,7 +18,7 @@
 #define CMDTYPE_WR_NR         0x03   //写控制表指令（无返回）
 #define CMDTYPE_SCP           0x05   //示波器数据返回指令（保留）
 
-#define geNodeId(cob_id) (cob_id&0x00FF)
+#define getNodeId(cob_id) (cob_id&0x00FF)
 
 typedef int32_t (*mCallback_t)(void* d, uint8_t index, void* args);
 
