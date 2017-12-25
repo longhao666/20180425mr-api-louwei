@@ -1,12 +1,20 @@
-#include "logger.h"
+ï»¿#include "logger.h"
 
 void loggerInit(FILE **fp)
 {
-#if  LOG_APPEND == 0 
-	SYSTEMTIME sys;
+#if  LOG_APPEND == 0
 	char path[256];
+#if defined _WINDOWS
+	SYSTEMTIME sys;
 	GetLocalTime(&sys);
-	sprintf(path,"./%4d%02d%02d-%02d%02d%02d.log", sys.wYear, sys.wMonth, sys.wDay, sys.wHour, sys.wMinute, sys.wSecond);
+	sprintf(path, "./%4d%02d%02d-%02d%02d%02d.log", sys.wYear, sys.wMonth, sys.wDay, sys.wHour, sys.wMinute, sys.wSecond);
+#elif defined Linux
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+	sprintf(path, "./%4d%02d%02d-%02d%02d%02d.log", local->tm_year+1900, local->tm_mon+1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+#endif
 	*fp = fopen(path, "a");
 	if (*fp == NULL)
 		printf("fopen logfile");
@@ -18,9 +26,15 @@ void loggerInit(FILE **fp)
 }
 
  void loggerTime(char* stime) {
-	LARGE_INTEGER m_nFreq;
+#if defined _WINDOWS
+	 LARGE_INTEGER m_nFreq;
 	LARGE_INTEGER m_nTime;
-	QueryPerformanceFrequency(&m_nFreq); // »ñÈ¡Ê±ÖÓÖÜÆÚ 
-	QueryPerformanceCounter(&m_nTime);//»ñÈ¡µ±Ç°Ê±¼ä 
+	QueryPerformanceFrequency(&m_nFreq); // è·å–æ—¶é’Ÿå‘¨æœŸ 
+	QueryPerformanceCounter(&m_nTime);//è·å–å½“å‰æ—¶é—´ 
 	sprintf(stime, "%.4f", ((double)m_nTime.QuadPart / m_nFreq.QuadPart));
+#elif defined Linux
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	sprintf(stime, "%.4f", ((double)tv.tv_sec + (double)tv.tv_usec/1000000));
+#endif
 }

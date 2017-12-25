@@ -1,8 +1,7 @@
-#ifndef _LOGGER_H_
+﻿#ifndef _LOGGER_H_
 #define _LOGGER_H_
 
-#include <stdio.h>
-#include <Windows.h>
+#include "can_driver.h"
 
 //#ifndef LOG_LEVEL
 //#define LOG_LEVEL 1
