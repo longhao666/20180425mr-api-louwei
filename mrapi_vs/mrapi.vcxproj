@@ -107,7 +107,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>PCAN_BASIC;_DEBUG;_WINDOWS;_USRDLL;MRAPI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;PCAN_BASIC;_DEBUG;_WINDOWS;_USRDLL;MRAPI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +157,7 @@
     <ClCompile Include="..\drivers\pcan_basic\pcan_basic.c" />
     <ClCompile Include="..\drivers\pcan_basic\thread_win.c" />
     <ClCompile Include="..\src\joint.c" />
+    <ClCompile Include="..\src\logger.c" />
     <ClCompile Include="..\src\master.c" />
     <ClCompile Include="..\src\module.c" />
   </ItemGroup>

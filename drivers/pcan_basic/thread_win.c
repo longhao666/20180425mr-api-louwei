@@ -1,19 +1,18 @@
 #include <stdlib.h>
-//#include <asm/types.h>
 #include <signal.h>
 #include <math.h>
 #include <string.h>
 
 #include "pcan_basic.h"
 
-static CRITICAL_SECTION CanThread_mutex;
 
+//// Timer is the same when different can device is open
 static struct timeval last_sig;
 
 HANDLE timer = NULL;
 DWORD timebuffer;
 HANDLE timer_thread = NULL;
-volatile int stop_timer=0;
+volatile int stop_timer = 1;
 
 int32_t recTaskInitFlag = 0;
 
@@ -34,16 +33,6 @@ void usleep(__int64 usec)
     CloseHandle(timer);
 }
 
-void EnterMutex(void)
-{
-    EnterCriticalSection(&CanThread_mutex);
-}
-
-void LeaveMutex(void)
-{
-    LeaveCriticalSection(&CanThread_mutex);
-}
-
 void setTimerInterval(uint32_t t) {
     timerVal = t;
     setTimer(timerVal);
@@ -53,7 +42,7 @@ static void (*canTxPeriodic)(DWORD* tv) = NULL;
 /// It's a cycle timer
 int TimerThreadLoop(LPVOID arg)
 {
-	MSG("Go into TimerThreadLoop\n");
+	ILOG("Go into TimerThreadLoop");
     while(!stop_timer)
     {
         WaitForSingleObject(timer, INFINITE);
@@ -65,7 +54,7 @@ int TimerThreadLoop(LPVOID arg)
         canTxPeriodic(&timebuffer);
 //        LeaveMutex();
     }
-	MSG("Go out of TimerThreadLoop\n");
+	ILOG("Go out of TimerThreadLoop");
 	return 0;
 }
 
@@ -74,6 +63,11 @@ void StartTimerLoop(int32_t hz, void* periodCall)
 	unsigned long timer_thread_id;
 	LARGE_INTEGER liDueTime;
 	float val = 0;
+
+	if (stop_timer == 0) {
+		ILOG("Timer has already been started");
+		return;
+	}
 	
 	liDueTime.QuadPart = 0;
 
@@ -82,7 +76,7 @@ void StartTimerLoop(int32_t hz, void* periodCall)
     timer = CreateWaitableTimer(NULL, FALSE, NULL);
     if(NULL == timer)
     {
-        MSG("CreateWaitableTimer failed (%d)\n", GetLastError());
+        ILOG("CreateWaitableTimer failed (%d)", GetLastError());
     }
 
     // Take first absolute time ref in milliseconds.
@@ -90,7 +84,7 @@ void StartTimerLoop(int32_t hz, void* periodCall)
 
     timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, NULL, 0, &timer_thread_id);
 	if (hz != -1) {
-		val = 1000000.0 / (float)hz;
+		val = 1000000.0f / (float)hz;
 	}
 	//setTimerInterval(round(val));
 }
@@ -122,7 +116,7 @@ void setTimer(TIMEVAL value) //us
 
         if (!SetWaitableTimer(timer, &liDueTime, 0, NULL, NULL, FALSE))
         {
-            MSG("SetWaitableTimer failed (%d)\n", GetLastError());
+            ILOG("SetWaitableTimer failed (%d)", GetLastError());
         }
     }
 }
@@ -139,31 +133,42 @@ static void (*canRxInterruptISR)(Message* msg) = NULL;
  */
 void* canReceiveLoop(void* arg)
 {
+	uint8_t recRet;
     TPCANStatus status;
     CAN_HANDLE handle = (CAN_HANDLE)arg;
     HANDLE hEvent = NULL;
     Message rxMsg = Message_Initializer;
+	CRITICAL_SECTION CanThread_mutex;
 
-    hEvent = CreateEvent(NULL, FALSE, FALSE, L"ReceiveEvent");
+	InitializeCriticalSection(&CanThread_mutex);
+	hEvent = CreateEvent(NULL, FALSE, FALSE, L"ReceiveEvent");
 
     status = CAN_SetValue(handle, PCAN_RECEIVE_EVENT, &hEvent, sizeof(HANDLE));
     if (status != PCAN_ERROR_OK) {
         char strMsg[256];
         CAN_GetErrorText(status, 0, strMsg);
-        MSG_ERROR("%s",strMsg);
+        ELOG("CAN_SetValue : %s",strMsg);
         return NULL;
     }
 	//Init FLAG is set to avoid message coming while event hasn't set
 	recTaskInitFlag = 1;
     while (1) {
         if ( WAIT_OBJECT_0 == WaitForSingleObject(hEvent, INFINITE)) {
+			//first of all, you are creating an auto-reset event, so you don't need to call ResetEvent() on your handle.
 			//ResetEvent(hEvent);
-            if (canReceive_driver(handle, &rxMsg) == 1) {
-                EnterMutex();
+            do {
+				recRet = canReceive_driver(handle, &rxMsg);
+				EnterCriticalSection(&CanThread_mutex);
                 if (canRxInterruptISR)
                     canRxInterruptISR(&rxMsg);
-                LeaveMutex();
-            }
+				LeaveCriticalSection(&CanThread_mutex);
+			} while (recRet == 1);
+			if (recRet == 2) {
+				ILOG("Please check if there is any module on the bus.CAN bus 0x%x will be reset with baudrate of 1M", handle);
+				CAN_Reset(handle);
+				canReset_driver(handle, "1M");
+				CAN_SetValue(handle, PCAN_RECEIVE_EVENT, &hEvent, sizeof(HANDLE));
+			}
         }
     }
 
@@ -173,12 +178,10 @@ void* canReceiveLoop(void* arg)
 void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoopPtr)
 {
     unsigned long thread_id = 0;
-    TPCANStatus status;
 
-    InitializeCriticalSection(&CanThread_mutex);
 	canRxInterruptISR = ReceiveLoopPtr;
 	if (canRxInterruptISR == NULL) {
-        MSG_ERROR("canRxInterruptISR cannot be NULL.\n");
+        ELOG("canRxInterruptISR cannot be NULL.\n");
         return;
     }
 
@@ -186,12 +189,12 @@ void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoop
 
 	while (recTaskInitFlag != 1);
 
-    MSG("Receive Task created.\n");
+    ILOG("Receive Task created");
 }
 
 void DestroyReceiveTask(TASK_HANDLE* Thread)
 {
-    DeleteCriticalSection(&CanThread_mutex);
+ //   DeleteCriticalSection(&CanThread_mutex);
 	if (WaitForSingleObject(*Thread, 1000) == WAIT_TIMEOUT)
 	{
 		TerminateThread(*Thread, -1);

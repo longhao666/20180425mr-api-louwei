@@ -1,14 +1,14 @@
 //#include <time.h>
+#include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
-#include "master.h"
+#include "mrapi.h"
 
-int32_t fillbuf(void* handle, uint16_t len) {
+int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
     uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t i;
-    Joint* p = (Joint*)handle;
     for (i = len; i < MAX_BUFS; i++)
-        jointPush(p, buf);
+        jointPush(handle, buf);
 	return 0;
 }
 
@@ -22,19 +22,19 @@ void signal_handler(int signal)
 int main(int argc, char const *argv[])
 {
     /* code */
-    Joint* joint1 = NULL;
+    JOINT_HANDLE joint1 = NULL;
     /* install signal handlers */
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
     startMaster(0);
-    MSG("Master Started.\n");
+    printf("Master Started\n");
     
     setControlLoopFreq(200);
     joint1 = jointUp(0x01, masterLoadSendFunction(0));
     if (joint1) {
-        if (jointSetModeTimeout(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
-            MSG("Set mode to speed loop.\n");
+        if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
+			printf("Set mode to speed loop\n");
         }
         jointStartServo(joint1, fillbuf);
     }

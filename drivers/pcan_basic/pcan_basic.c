@@ -76,7 +76,7 @@ CAN_HANDLE TranslateCANHandle(char* optarg) {
 
 uint8_t canChangeBaudRate_driver(CAN_HANDLE fd, char* baud)
 {
-	MSG("canChangeBaudRate not yet supported by this driver\n");
+	ILOG("canChangeBaudRate not yet supported by this driver\n");
 	return 0;
 }
 
@@ -85,6 +85,8 @@ CAN_HANDLE canOpen_driver(char* busname, char* baud)
 {
 	CAN_HANDLE handle = 0;
 	int baudrate;
+	int iBuffer;
+	char sBuffer[256] = "./log";
 
 	TPCANStatus status;
 
@@ -96,11 +98,26 @@ CAN_HANDLE canOpen_driver(char* busname, char* baud)
 		if (status != PCAN_ERROR_OK) {
 			char errText[256];
 			CAN_GetErrorText(status, 0, errText);
-			MSG_ERROR("canOpen_driver (PCANBasic) : error initiallizing %s, error %s.\n", busname, errText);
+			ELOG("%s@%s", errText, __FUNCTION__);
+			handle = PCAN_NONEBUS;
 		}
+		iBuffer = PCAN_PARAMETER_ON;
+		CAN_SetValue(handle, PCAN_BUSOFF_AUTORESET, (void*)&iBuffer, sizeof(iBuffer));
+		//iBuffer = PCAN_PARAMETER_ON;
+		//CAN_SetValue(PCAN_NONEBUS, PCAN_LOG_LOCATION, (void*)&sBuffer, sizeof(sBuffer));
+		//iBuffer = LOG_FUNCTION_ALL;
+		//CAN_SetValue(handle, PCAN_LOG_CONFIGURE, (void*)&iBuffer, sizeof(iBuffer));
+		//iBuffer = TRACE_FILE_SINGLE;
+		//CAN_SetValue(handle, PCAN_TRACE_CONFIGURE, (void*)&iBuffer, sizeof(iBuffer));
+		iBuffer = 0;
+		CAN_SetValue(handle, PCAN_TRACE_SIZE, (void*)&iBuffer, sizeof(iBuffer));
+		iBuffer = PCAN_PARAMETER_ON;
+		//CAN_SetValue(PCAN_NONEBUS, PCAN_LOG_STATUS, (void*)&iBuffer, sizeof(iBuffer));
+		CAN_SetValue(handle, PCAN_TRACE_STATUS, (void*)&iBuffer, sizeof(iBuffer));
 	}
 	else {
-		MSG_ERROR("canOpen_driver (PCANBasic) : error opening %s.\n", busname);
+		ELOG("cannot opening %s @canOpen_driver", busname);
+		handle = PCAN_NONEBUS;
 	}
 
 	return (CAN_HANDLE)handle;
@@ -116,7 +133,7 @@ void canReset_driver(CAN_HANDLE handle, char* baud)
 	if (status != PCAN_ERROR_OK) {
 		char errText[256];
 		CAN_GetErrorText(status, 0, errText);
-		MSG_ERROR("canOpen_driver (PCANBasic) : error uminitiallizing error %s.\n", errText);
+		ELOG("%s@%s", errText, __FUNCTION__);
 	}
 
 	if (handle && (baudrate = TranslateBaudeRate(baud)))
@@ -125,11 +142,11 @@ void canReset_driver(CAN_HANDLE handle, char* baud)
 		if (status != PCAN_ERROR_OK) {
 			char errText[256];
 			CAN_GetErrorText(status, 0, errText);
-			MSG_ERROR("canOpen_driver (PCANBasic) : error initiallizing, error %s.\n", errText);
+			ELOG("%s@%s", errText, __FUNCTION__);
 		}
 	}
 	else {
-		MSG_ERROR("canOpen_driver (PCANBasic) : error opening.\n");
+		ELOG("error opening @canOpen_driver");
 	}
 }
 
@@ -144,7 +161,7 @@ uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
   status = CAN_Read(handle, &peakMsg, &timeStamp);		// Poll
   if (status == PCAN_ERROR_OK)
   {
-    m->cob_id = peakMsg.ID;   
+    m->cob_id = (uint16_t)peakMsg.ID;   
     if (peakMsg.MSGTYPE == CAN_INIT_TYPE_ST)         	/* bits of MSGTYPE_*/
       m->rtr = 0;
     else 
@@ -154,8 +171,9 @@ uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
       m->data[data] = peakMsg.DATA[data];         	/* data bytes, up to 8 */
 
   #if defined DEBUG_MSG_CONSOLE_ON
-    MSG("in : ");
-    print_message(m);
+	RLOG("%.4f", (double)((uint64_t)timeStamp.micros + (uint64_t)1000 * timeStamp.millis + (uint64_t)0x100000000 * 1000 * timeStamp.millis_overflow)/1000000.0);
+	RLOG(" | IN    | ");
+	print_message(m);
   #endif
     
     ret =  1;
@@ -163,13 +181,11 @@ uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
   else if (status != PCAN_ERROR_QRCVEMPTY) {
 	char errText[256];
 	CAN_GetErrorText(status, 0, errText);
-	MSG_ERROR("canReceive_driver (PCANBasic) : error of reading. %s\n", errText);
-	if (status == PCAN_ERROR_BUSHEAVY) {
-		MSG("Please check if there is any module on the bus. CAN bus 0x%x will be reset with baudrate of 1M.\n", handle);
-		canReset_driver(handle, "1M");
-		ret = 0;
-	}
+	ELOG("%s@%s", errText, __FUNCTION__);
 	ret = 0;
+	if (status == PCAN_ERROR_BUSHEAVY) {
+		ret = 2;
+	}
   }
   else {}
   
@@ -197,9 +213,15 @@ uint8_t canSend_driver(CAN_HANDLE handle, Message const *m)
   if(status != PCAN_ERROR_OK) {
     char errText[256];
     CAN_GetErrorText(status, 0, errText);
-	MSG_ERROR("canSend_driver (PCANBasic) : error of writing %s.\n", errText);
-    return 1;
+	ELOG("%s@%s", errText, __FUNCTION__);
+	return 1;
   }
+#if defined DEBUG_MSG_CONSOLE_ON
+  //LOG("%.4f ", (double)((uint64_t)timeStamp.micros + (uint64_t)1000 * timeStamp.millis + (uint64_t)0x100000000 * 1000 * timeStamp.millis_overflow) / 1000000.0);
+  LOG_TIME();
+  RLOG(" | OUT   | ");
+  print_message(m);
+#endif
   return 0;
 
 }
@@ -212,8 +234,8 @@ int canClose_driver(CAN_HANDLE handle)
   if (status != PCAN_ERROR_OK) {
     char errText[256];
     CAN_GetErrorText(status, 0, errText);
-	MSG_ERROR("canClose_driver (PCANBasic) : error closing %s. \n", errText);
-    return -1;
+	ELOG("%s@%s", errText, __FUNCTION__);
+	return -1;
   }
 
   return 0;

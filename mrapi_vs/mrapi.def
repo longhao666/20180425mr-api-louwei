@@ -1,20 +1,19 @@
 LIBRARY "mrapi"
 EXPORTS
-	jointUp @1
-	jointDown @2
-	jointSelect @3
-	jointStartServo @4
-	jointStopServo @5
-	jointPush @6
-	jointPoll @7
-	jointGetIdTimeout @12
-	jointGetTypeTimeout @13
-	jointSetModeTimeout @14
-	can1Send @15
-	can2Send @16
-	startMaster @17
-	stopMaster @18
-	joinMaster @19
-	setControlLoopFreq @20
-	masterLoadSendFunction @21
+	startMaster @1
+	stopMaster @2
+	joinMaster @3
+	setControlLoopFreq @4
+	masterLoadSendFunction @5
+	jointUp @6
+	jointDown @7
+	jointSelect @8
+	jointStartServo @9
+	jointStopServo @10
+	jointPush @11
+	jointPoll @12
+	jointGetId @13
+	jointGetType @14
+	jointSetMode @15
+
 

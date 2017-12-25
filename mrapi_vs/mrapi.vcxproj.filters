@@ -33,6 +33,9 @@
     <ClCompile Include="..\drivers\pcan_basic\thread_win.c">
       <Filter>Source Files\driver</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\logger.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\can_driver.h">

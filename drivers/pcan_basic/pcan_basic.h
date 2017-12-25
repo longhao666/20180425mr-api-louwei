@@ -18,6 +18,7 @@ void WaitReceiveTaskEnd(TASK_HANDLE* Thread);
 
 uint8_t canChangeBaudRate_driver(CAN_HANDLE fd, char* baud);
 CAN_HANDLE canOpen_driver(char* busno, char* baud);
+void canReset_driver(CAN_HANDLE handle, char* baud);
 uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m);
 uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m);
 

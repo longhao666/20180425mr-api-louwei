@@ -21,7 +21,7 @@ int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData) {
 ///write entry without reply
 int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataType) {
   if ((d->accessType[index] != WO) && (d->accessType[index]) != RW) {
-    MSG_ERROR("Write Entry Pemission");
+    ELOG("Write Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;
@@ -38,7 +38,7 @@ int32_t writeEntryNR(Module* d, uint8_t index, void* pSourceData, uint8_t dataTy
 
 int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t dataType, mCallback_t callBack) {
   if ((d->accessType[index] != WO) && (d->accessType[index]) != RW) {
-    MSG_ERROR("Write Entry Pemission");
+    ELOG("Write Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;
@@ -58,8 +58,8 @@ int32_t writeEntryCallback(Module* d, uint8_t index, void* pSourceData, uint8_t 
 
 int32_t readEntryCallback(Module* d, uint8_t index, uint8_t dataType, mCallback_t callBack) {
   if ((d->accessType[index] != RO) && (d->accessType[index]) != RW) {
-    MSG("d->accessType[index] = %d\n", d->accessType[index]);
-    MSG_ERROR("Read Entry Pemission");
+    DLOG("d->accessType[index] = %d", d->accessType[index]);
+    ELOG("Read Entry Pemission");
     return -1;
   }
   Message txMsg = Message_Initializer;
@@ -81,7 +81,7 @@ int32_t setSyncReceiveMap(Module* d, uint16_t index[4]) {
     return 0;
 }
 
-int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestData)
+int32_t _setLocalEntry(Module* d, uint16_t index, uint8_t dataType, void* pDestData)
 {
   if (index >= d->memoryLen) {
       return -1;
@@ -99,6 +99,7 @@ int32_t _setLocalEntry(Module* d, uint8_t index, uint8_t dataType, void* pDestDa
     (uint8_t*)pDestData += 2;
     index += 1;
   }
+  return 0;
 }
 
 void canDispatch(Module *d, Message *msg)
@@ -106,11 +107,11 @@ void canDispatch(Module *d, Message *msg)
   uint16_t cob_id = msg->cob_id;
   uint16_t nodeid = getNodeId(cob_id);
   if (msg->rtr) {
-    MSG_WARN("remote frame received");
+    WLOG("remote frame received");
     return;
   }
   if (nodeid != *d->moduleId) {
-    MSG_WARN("Dismatched id!");
+    WLOG("Dismatched id!");
     return;
   }
   switch(cob_id>>8){

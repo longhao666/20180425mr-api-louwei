@@ -1,5 +1,4 @@
 #include <math.h>
-//#include <sys/time.h>
 #include "master.h"
 
 #define UNUSED(arg) (void)arg
@@ -8,8 +7,8 @@ int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
 // Max two CAN Ports
-TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
 CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
 
 uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg);}
 uint8_t can2Send(Message* msg) { return canSend_driver(hCan[1], msg); }
@@ -31,6 +30,7 @@ int32_t startMaster(uint8_t masterId) {
   // Open and Initiallize CAN Port
   hCan[masterId] = canOpen_driver("pcan1", "1M");
   // Use CAN1 as the device
+  ILOG("Hello world");
 
   // Create and Start thread to read CAN message
   CreateReceiveTask(hCan[masterId], &hReceiveTask[masterId], _canReadISR);
@@ -46,13 +46,14 @@ int32_t stopMaster(uint8_t masterId) {
   return 0;
 }
 
-canSend_t masterLoadSendFunction(uint8_t masterId) {
+void* masterLoadSendFunction(uint8_t masterId) {
 	switch (masterId) {
-	case 0: return can1Send;
-	case 1: return can2Send;
-	case 2: return can3Send;
-	case 3: return can4Send;
+	case 0: return (void*)can1Send;
+	case 1: return (void*)can2Send;
+	case 2: return (void*)can3Send;
+	case 3: return (void*)can4Send;
 	}
+	return NULL;
 }
 
 int32_t joinMaster(uint8_t masterId) {
