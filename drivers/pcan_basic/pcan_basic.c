@@ -219,7 +219,7 @@ uint8_t canSend_driver(CAN_HANDLE handle, Message const *m)
 #if defined LOG_MSG_ON
   LOG_TIME();
   RLOG(" | OUT   | ");
-  print_message(m);
+  print_message((Message*)m);
 #endif
   return 0;
 

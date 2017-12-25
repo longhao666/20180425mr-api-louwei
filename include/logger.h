@@ -15,8 +15,8 @@
 		if(logp==NULL) {		\
 			loggerInit(&logp);	\
 		}                    \
-		loggerTime(stime);  \
-		fprintf(logp,"%s%s", stime, level); \
+                loggerTime(sstime);  \
+                fprintf(logp,"%s%s", sstime, level); \
 		fprintf(logp,__VA_ARGS__);		\
 		fprintf(logp,"\n");	\
 		fflush(logp);			\
@@ -25,7 +25,7 @@
 #define RLOG(...)  \
 	{						\
 		if (logp == NULL) {  \
-			loggerInit(&logp);	\
+                    loggerInit(&logp);	\
 		}                    \
 		fprintf(logp, __VA_ARGS__);		\
 		fflush(logp);			\
@@ -36,8 +36,8 @@
 		if (logp == NULL) {  \
 			loggerInit(&logp);	\
 		}                    \
-		loggerTime(stime);  \
-		fprintf(logp, "%s", stime); \
+                loggerTime(sstime);  \
+                fprintf(logp, "%s", sstime); \
 		fflush(logp);			\
 	}\
 
@@ -69,7 +69,7 @@
 #endif
 
 FILE *logp;
-char stime[256];
+char sstime[256];
 
 void loggerInit(FILE **fp);
 void loggerTime(char*);

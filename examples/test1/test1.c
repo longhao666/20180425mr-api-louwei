@@ -3,44 +3,44 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "master.h"
+#include <stdio.h>
+#include "mrapi.h"
 
 int32_t fillbuf(void* handle, uint16_t len) {
     uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t i;
-    Joint* p = (Joint*)handle;
     for (i = len; i < MAX_BUFS; i++)
-        jointPush(p, buf);
+        jointPush(handle, buf);
 }
 
 // the signal handler for manual break Ctrl-C
 void signal_handler(int signal)
 {
-    stopMaster();
+    stopMaster(0);
     exit(0);
 }
 
 int main(int argc, char const *argv[])
 {
     /* code */
-    Joint* joint1 = NULL;
+    JOINT_HANDLE joint1 = NULL;
     /* install signal handlers */
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    startMaster();
-    MSG("Master Started.\n");
+    startMaster(0);
+    printf("Master Started.\n");
     
     setControlLoopFreq(200);
-    joint1 = jointUp(0x01, can1Send);
+    joint1 = jointUp(0x01, masterLoadSendFunction(0));
     if (joint1) {
-        if (jointSetModeTimeout(joint1, MODE_CYCLESYNC, 1000) == 0){
-            MSG("Set mode to speed loop.\n");
+        if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
+            printf("Set mode to speed loop.\n");
         }
         jointStartServo(joint1, fillbuf);
     }
 //    jointStopServo(joint1);
 
-    joinMaster();
+    joinMaster(0);
     return 0;
 }

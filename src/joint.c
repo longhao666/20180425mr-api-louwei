@@ -466,7 +466,7 @@ int32_t jointDown(JOINT_HANDLE h) {
 int32_t _jointGETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	Module* pModule = (Module*)pJoint->basicModule;
-	if (timeout == INFINITE) {
+    if (timeout == -1) {
 		jointRxCb[index] = callBack;
 		readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
 		return 0;
@@ -497,7 +497,7 @@ int32_t _jointSETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, void* dat
 	int16_t i;
 	int32_t ret;
 	Module* pModule = (Module*)pJoint->basicModule;
-	if (timeout == INFINITE) {
+    if (timeout == -1) {
 		jointTxCb[index] = callBack;
 		writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
 		return 0;

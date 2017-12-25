@@ -2,9 +2,12 @@
 #define _MRAPI_H_
 #include <stdint.h>
 
+#ifndef _WINDOWS
+#define __stdcall
+#endif
 #define LOG_MSG_ON
 #define LOG_LEVEL 1
-#define LOG_APPEND 0
+#define LOG_APPEND 1
 #define MAX_CAN_DEVICES 4
 
 ////* JOINTS *///

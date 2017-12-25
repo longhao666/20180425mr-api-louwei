@@ -83,6 +83,7 @@ int32_t setSyncReceiveMap(Module* d, uint16_t index[4]) {
 
 int32_t _setLocalEntry(Module* d, uint16_t index, uint8_t dataType, void* pDestData)
 {
+  uint8_t* pData = pDestData;
   if (index >= d->memoryLen) {
       return -1;
   }
@@ -93,10 +94,10 @@ int32_t _setLocalEntry(Module* d, uint16_t index, uint8_t dataType, void* pDestD
   memcpy((void*)&(d->memoryTable[index]), pDestData, dataType);
   while(dataType) {
     if (d->readDoneCb[index]) {
-      d->readDoneCb[index](d, index, pDestData);
+      d->readDoneCb[index](d, index, pData);
     }
     dataType -= 2;
-    (uint8_t*)pDestData += 2;
+    pData += 2;
     index += 1;
   }
   return 0;

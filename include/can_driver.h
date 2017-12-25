@@ -6,15 +6,17 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+#define TASK_HANDLE pthread_t
+
 #elif defined _WINDOWS
 #include <Windows.h>
+#define TASK_HANDLE HANDLE
 #endif
 #include "mrapi.h"  //should before logger.h
 #include "logger.h"
 
 #define delay_us(n) usleep(n)
 
-#define TASK_HANDLE HANDLE
 
 /** 
  * @brief The CAN message structure 
@@ -34,13 +36,13 @@ typedef uint8_t (*canSend_t)(Message *);
 static inline void print_message(Message* m)
 {
     int i;
-	char msg[256];
+    char msg[256];
     sprintf(msg, "id:0x%02X rtr:%d len:%d data:", m->cob_id, m->rtr, m->len);
 
     for (i = 0 ; i < m->len ; i++)
-		sprintf(msg, "%s 0x%02X",msg, m->data[i]);
-	sprintf(msg, "%s\n", msg);
-	RLOG(msg);
+        sprintf(msg, "%s 0x%02X",msg, m->data[i]);
+    sprintf(msg, "%s\n", msg);
+    RLOG("%s",msg);
 }
 
 #endif
