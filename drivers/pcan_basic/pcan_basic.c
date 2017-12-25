@@ -170,7 +170,7 @@ uint8_t canReceive_driver(CAN_HANDLE handle, Message *m)
     for(data = 0  ; data < peakMsg.LEN ; data++)             			
       m->data[data] = peakMsg.DATA[data];         	/* data bytes, up to 8 */
 
-  #if defined DEBUG_MSG_CONSOLE_ON
+  #if defined LOG_MSG_ON
 	RLOG("%.4f", (double)((uint64_t)timeStamp.micros + (uint64_t)1000 * timeStamp.millis + (uint64_t)0x100000000 * 1000 * timeStamp.millis_overflow)/1000000.0);
 	RLOG(" | IN    | ");
 	print_message(m);
@@ -216,8 +216,7 @@ uint8_t canSend_driver(CAN_HANDLE handle, Message const *m)
 	ELOG("%s@%s", errText, __FUNCTION__);
 	return 1;
   }
-#if defined DEBUG_MSG_CONSOLE_ON
-  //LOG("%.4f ", (double)((uint64_t)timeStamp.micros + (uint64_t)1000 * timeStamp.millis + (uint64_t)0x100000000 * 1000 * timeStamp.millis_overflow) / 1000000.0);
+#if defined LOG_MSG_ON
   LOG_TIME();
   RLOG(" | OUT   | ");
   print_message(m);

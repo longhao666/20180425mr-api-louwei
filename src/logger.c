@@ -2,7 +2,7 @@
 
 void loggerInit(FILE **fp)
 {
-#if defined APPEND_FILE 
+#if  LOG_APPEND == 0 
 	SYSTEMTIME sys;
 	char path[256];
 	GetLocalTime(&sys);
@@ -10,8 +10,10 @@ void loggerInit(FILE **fp)
 	*fp = fopen(path, "a");
 	if (*fp == NULL)
 		printf("fopen logfile");
-#elif defined APPEND_STDOUT
+#elif LOG_APPEND == 1
 	*fp = stdout;
+#elif LOG_APPEND == 2
+	* fp = stderr;
 #endif
 }
 

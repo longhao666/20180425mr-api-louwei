@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <math.h>
 #include <string.h>
+#include <Windows.h>
 
 #include "pcan_basic.h"
 
@@ -187,7 +188,7 @@ void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoop
 
     *Thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)canReceiveLoop, (void*)handle, 0, &thread_id);
 
-	while (recTaskInitFlag != 1);
+	while (recTaskInitFlag != 1) { Sleep(0); }
 
     ILOG("Receive Task created");
 }

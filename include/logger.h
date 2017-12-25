@@ -4,10 +4,12 @@
 #include <stdio.h>
 #include <Windows.h>
 
-#ifndef LOG_LEVEL
-#define LOG_LEVEL 1
-#endif
-#define APPEND_STDOUT
+//#ifndef LOG_LEVEL
+//#define LOG_LEVEL 1
+//#endif
+//#ifndef LOG_APPEND
+//#define LOG_APPEND 1
+//#endif
 
 #define PLOG(level, ...) \
 	{						\
