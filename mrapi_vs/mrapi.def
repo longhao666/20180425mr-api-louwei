@@ -14,6 +14,41 @@ EXPORTS
 	jointPoll @12
 	jointGetId @13
 	jointGetType @14
-	jointSetMode @15
+	jointGetVoltage @15
+	jointGetTemp @16
+	jointGetBaudrate @17
+	jointGetCurrent @18
+	jointGetSpeed @19
+	jointGetPosition @20
+	jointGetMode @21
+	jointGetMaxSpeed @22
+	jointGetMaxAcceleration @23
+	jointGePositionLimit @24
+	jointGetCurrP @25
+	jointGetCurrI @26
+	jointGetSpeedP @27
+	jointGetSpeedI @28
+	jointGetPositionP @29
+	jointGetPositionDs @30
+	jointSetID @31
+	jointSetBaudrate @32
+	jointSetEnable @33
+	jointSetPowerOnStatus @34
+	jointSetSave2Flash @35
+	jointSetZero @36
+	jointSetClearError @37
+	jointSetMode @38
+	jointSetSpeed @39
+	jointSetMaxSpeed @40
+	jointSetPosition @41
+	jointSetMaxAcceleration @42
+	jointSetPositionLimit @43
+	jointSetCurrP @44
+	jointSetCurrI @45 
+	jointSetSpeedP @46
+	jointSetSpeedI @47
+	jointSetPositionP @48
+	jointSetPositionDs @49
+	jointSetScpMask @50
 
 

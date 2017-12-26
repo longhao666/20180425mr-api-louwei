@@ -33,10 +33,12 @@ int main(int argc, char const *argv[])
     setControlLoopFreq(200);
     joint1 = jointUp(0x01, masterLoadSendFunction(0));
     if (joint1) {
-        if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
+        if (jointSetMode(joint1, MODE_POSITION, 1000, NULL) == 0){
 			printf("Set mode to speed loop\n");
         }
-        jointStartServo(joint1, fillbuf);
+        //jointStartServo(joint1, fillbuf);
+		jointSetPosition(joint1, 65536, 1000, NULL);
+		jointGetPosition(joint1, NULL, 1000, NULL);
     }
 //    jointStopServo(joint1);
 

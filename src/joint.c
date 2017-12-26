@@ -463,7 +463,7 @@ int32_t jointDown(JOINT_HANDLE h) {
 /// Get Information from Joints
 
 /// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
-int32_t _jointGETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
+int32_t _jointGETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	Module* pModule = (Module*)pJoint->basicModule;
     if (timeout == -1) {
@@ -535,14 +535,156 @@ int32_t jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jC
 	return _jointGETTemplet(SYS_VOLTAGE, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
+int32_t jointGetTemp(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(SYS_TEMP, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetBaudrate(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetCurrent(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(SYS_CURRENT_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetSpeed(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(SYS_SPEED_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetPosition(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(SYS_POSITION_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetMode(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(TAG_WORK_MODE, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetMaxSpeed(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(LIT_MAX_SPEED, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(LIT_MAX_ACC, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGePositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(LIT_MIN_POSITION_L, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t jointGetCurrP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_CURRENT_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t jointGetCurrI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_CURRENT_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
+}
+
+int32_t jointGetSpeedP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_SPEED_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t jointGetSpeedI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_SPEED_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
+}
+
+int32_t jointGetPositionP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_POSITION_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t jointGetPositionDs(JOINT_HANDLE pJoint, uint16_t* dsValue, int32_t timeout, jCallback_t callBack) {
+	return _jointGETTemplet(S_POSITION_DS, 2, (Joint*)pJoint, dsValue, timeout, callBack);
+}
+
+int32_t jointSetID(JOINT_HANDLE pJoint, uint16_t id, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(SYS_ID, 2, (Joint*)pJoint, (void*)&id, timeout, callBack);
+}
+
+int32_t jointSetBaudrate(JOINT_HANDLE pJoint, uint16_t baud, int32_t timeout, jCallback_t callBack) { //us
+	if (isJointMode(baud)) {
+		return _jointSETTemplet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, (void*)&baud, timeout, callBack);
+	}
+	return MR_ERROR_ILLDATA;
+}
+
+int32_t jointSetEnable(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(SYS_ENABLE_DRIVER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t jointSetPowerOnStatus(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(SYS_ENABLE_ON_POWER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t jointSetSave2Flash(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+	uint16_t isEnable = 1;
+	return _jointSETTemplet(SYS_SAVE_TO_FLASH, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t jointSetZero(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+	uint16_t isEnable = 1;
+	return _jointSETTemplet(SYS_SET_ZERO_POS, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t jointSetClearError(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+	uint16_t isEnable = 1;
+	return _jointSETTemplet(SYS_CLEAR_ERROR, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
 int32_t jointSetMode(JOINT_HANDLE pJoint, uint16_t mode, int32_t timeout, jCallback_t callBack) { //us
 	if (isJointMode(mode)) {
 		return _jointSETTemplet(TAG_WORK_MODE, 2, (Joint*)pJoint, (void*)&mode, timeout, callBack);
 	}
-    return MR_ERROR_ILLDATA;
+	return MR_ERROR_ILLDATA;
 }
 
-int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, jCallback_t callBack) {
-    return _jointSETTemplet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
+int32_t jointSetSpeed(JOINT_HANDLE pJoint, int32_t speed, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(TAG_SPEED_L, 4, (Joint*)pJoint, (void*)&speed, timeout, callBack);
 }
+
+int32_t jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
+}
+
+int32_t jointSetMaxSpeed(JOINT_HANDLE pJoint, int32_t maxspeed, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(LIT_MAX_SPEED, 2, (Joint*)pJoint, (void*)&maxspeed, timeout, callBack);
+}
+
+int32_t jointSetMaxAcceleration(JOINT_HANDLE pJoint, int32_t maxacc, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(LIT_MAX_ACC, 2, (Joint*)pJoint, (void*)&maxacc, timeout, callBack);
+}
+
+int32_t jointSetPositionLimit(JOINT_HANDLE pJoint, int32_t position_min, int32_t position_max, int32_t timeout, jCallback_t callBack) {
+
+	return _jointSETTemplet(LIT_MIN_POSITION_L, 8, (Joint*)pJoint, (void*)&position_min, timeout, callBack);
+}
+
+int32_t jointSetCurrP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_CURRENT_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t jointSetCurrI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_CURRENT_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
+}
+
+int32_t jointSetSpeedP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_SPEED_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t jointSetSpeedI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_SPEED_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
+}
+
+int32_t jointSetPositionP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_POSITION_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(S_POSITION_DS, 2, (Joint*)pJoint, (void*)&dsValue, timeout, callBack);
+}
+
+int32_t jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, jCallback_t callBack) {
+	return _jointSETTemplet(SCP_MASK, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
+}
+
+
+
 
