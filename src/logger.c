@@ -27,10 +27,10 @@ void loggerInit(FILE **fp)
 
  void loggerTime(char* stime) {
 #if defined _WINDOWS
-	 LARGE_INTEGER m_nFreq;
+    LARGE_INTEGER m_nFreq;
 	LARGE_INTEGER m_nTime;
 	QueryPerformanceFrequency(&m_nFreq); // 获取时钟周期 
-	QueryPerformanceCounter(&m_nTime);//获取当前时间 
+    QueryPerformanceCounter(&m_nTime);   //获取当前时间
 	sprintf(stime, "%.4f", ((double)m_nTime.QuadPart / m_nFreq.QuadPart));
 #elif defined Linux
 	struct timeval tv;

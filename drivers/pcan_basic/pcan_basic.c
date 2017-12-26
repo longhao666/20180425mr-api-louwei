@@ -28,9 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdint.h>
 
 /* driver pcan pci for Peak board */
-//#include "libpcan.h"
-//#include "pcan.h"
-
 #include "pcan_basic.h" // for CAN_HANDLE
 
 // Define for rtr CAN message
@@ -85,7 +82,7 @@ CAN_HANDLE canOpen_driver(char* busname, char* baud)
 {
 	CAN_HANDLE handle = 0;
 	int baudrate;
-	int iBuffer;
+    TPCANParameter iBuffer;
 	char sBuffer[256] = "./log";
 
 	TPCANStatus status;

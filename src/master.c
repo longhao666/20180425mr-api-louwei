@@ -6,9 +6,9 @@
 int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
-// Max two CAN Ports
+// Max 4 CAN Ports
 CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
-TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES];
 
 uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg);}
 uint8_t can2Send(Message* msg) { return canSend_driver(hCan[1], msg); }
@@ -37,13 +37,13 @@ int32_t startMaster(uint8_t masterId) {
 
   StartTimerLoop(-1, jointPeriodSend);
 
-  return 0;
+  return MR_ERROR_OK;
 }
 
 int32_t stopMaster(uint8_t masterId) {
   StopTimerLoop();
   DestroyReceiveTask(&hReceiveTask[masterId]);
-  return 0;
+  return MR_ERROR_OK;
 }
 
 void* masterLoadSendFunction(uint8_t masterId) {
@@ -59,7 +59,7 @@ void* masterLoadSendFunction(uint8_t masterId) {
 int32_t joinMaster(uint8_t masterId) {
   WaitReceiveTaskEnd(&hReceiveTask[masterId]);
   DestroyReceiveTask(&hReceiveTask[masterId]);
-  return 0;
+  return MR_ERROR_OK;
 }
 
 int32_t setControlLoopFreq(int32_t hz) {
@@ -68,6 +68,6 @@ int32_t setControlLoopFreq(int32_t hz) {
       val = 1000000.0f/(float)hz;
   }
   setTimerInterval(round(val));
-  return 0;
+  return MR_ERROR_OK;
 }
 

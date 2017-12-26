@@ -38,9 +38,9 @@ int main(int argc, char const *argv[])
             printf("Set mode to speed loop.\n");
         }
         jointStartServo(joint1, fillbuf);
+        jointSetPosition(joint1,0,5000,NULL);
     }
 //    jointStopServo(joint1);
-
     joinMaster(0);
     return 0;
 }

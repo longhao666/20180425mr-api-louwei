@@ -11,7 +11,7 @@
 #define MAX_CAN_DEVICES 4
 
 ////* JOINTS *///
-#define MAX_JOINTS 10
+#define MAX_JOINTS 14
 #define MAX_BUFS 128
 #define WARNING_BUFS 20
 
@@ -30,6 +30,17 @@
 #define MODE_SPEED            2       //速度模式
 #define MODE_POSITION         3       //位置模式
 #define MODE_CYCLESYNC        4       //循环同步
+
+// Represent the MRAPI error and status codes
+//
+#define MR_ERROR_OK                0x00000U  // No error
+#define MR_ERROR_TIMEOUT           0x00000U  // No error
+#define MR_ERROR_BUSY              0x00004U  // Bus error: an error counter reached the 'light' limit
+#define MR_ERROR_ACK0              0x00008U  // Bus error: an error counter reached the 'heavy' limit
+#define MR_ERROR_ACK1              0x00008U  // Bus error: an error counter reached the 'heavy' limit
+#define MR_ERROR_QXMTFULL          0x00080U  // Transmit queue is full
+#define MR_ERROR_QXMTEMPTY         0x00080U  // Transmit queue is full
+#define MR_ERROR_ILLDATA           0x20000U  // Invalid data, function, or action
 
 //错误字节MASK定义
 #define ERROR_MASK_OVER_CURRENT   0x0001    //过流
@@ -51,30 +62,33 @@ typedef int32_t(*jQueShortHandler_t)(JOINT_HANDLE pJoint, uint16_t len);
 typedef int32_t(*jCallback_t)(uint16_t id, uint16_t index, void* args);
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
+#define _DEF_ARG =0
+#else
+#define _DEF_ARG
 #endif
-	int32_t __stdcall startMaster(uint8_t masterId);
-	int32_t __stdcall stopMaster(uint8_t masterId);
-	int32_t __stdcall joinMaster(uint8_t masterId);
-	int32_t __stdcall setControlLoopFreq(int32_t hz);
-	void* __stdcall masterLoadSendFunction(uint8_t masterId);
+int32_t __stdcall startMaster(uint8_t masterId);
+int32_t __stdcall stopMaster(uint8_t masterId);
+int32_t __stdcall joinMaster(uint8_t masterId);
+int32_t __stdcall setControlLoopFreq(int32_t hz);
+void* __stdcall masterLoadSendFunction(uint8_t masterId);
 
-	JOINT_HANDLE __stdcall jointUp(uint16_t id, void* canSend); //construct Joint and put it in joint stack
-	int32_t      __stdcall jointDown(JOINT_HANDLE pJoint);          //destruct joint and remove it from joint stack
-	JOINT_HANDLE __stdcall jointSelect(uint16_t id);  //find joint by it's ID
+JOINT_HANDLE __stdcall jointUp(uint16_t id, void* canSend); //construct Joint and put it in joint stack
+int32_t      __stdcall jointDown(JOINT_HANDLE pJoint);          //destruct joint and remove it from joint stack
+JOINT_HANDLE __stdcall jointSelect(uint16_t id);  //find joint by it's ID
 
-	void __stdcall jointStartServo(JOINT_HANDLE pJoint, jQueShortHandler_t handler);
-	void __stdcall jointStopServo(JOINT_HANDLE pJoint);
+void __stdcall jointStartServo(JOINT_HANDLE pJoint, jQueShortHandler_t handler);
+void __stdcall jointStopServo(JOINT_HANDLE pJoint);
 
-	int32_t __stdcall jointPush(JOINT_HANDLE pJoint, uint8_t* buf);
-	int32_t __stdcall jointPoll(JOINT_HANDLE pJoint, uint8_t* buf);
+int32_t __stdcall jointPush(JOINT_HANDLE pJoint, uint8_t* buf);
+int32_t __stdcall jointPoll(JOINT_HANDLE pJoint, uint8_t* buf);
 
-	int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
-	int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
-	int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
 
-	int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, uint16_t mode, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, uint16_t mode, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, jCallback_t callBack);
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
 #include <string.h>
 #include "joint.h"
 
-#define CMDMAP_LEN            160    //ÄÚ´æ¿ØÖÆ±í×Ü³¤¶È£¨°ë×Öµ¥Î»16bits£©
+#define CMDMAP_LEN            160    //
 
 //系统状态相关
 #define SYS_ID                0x01    //驱动器ID
@@ -289,7 +289,7 @@ int32_t _onCommonReadEntry(void* module, uint16_t index, void* args) {
 	  //jointRxCb[index] = NULL;
   }
 
-  return 0;
+  return MR_ERROR_OK;
 }
 
 int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
@@ -304,17 +304,17 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
 	  //jointTxCb[index] = NULL;
   }
 
-  return 0;
+  return MR_ERROR_OK;
 }
 
 int32_t jointPush(JOINT_HANDLE h, uint8_t* buf) {
 	Joint* pJoint = (Joint*)h;
     if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
-        return -1;
+        return MR_ERROR_QXMTFULL;
     }
     memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
     pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
-    return 0;
+    return MR_ERROR_OK;
 }
 
 int32_t jointPoll(JOINT_HANDLE h, uint8_t* buf) {
@@ -323,14 +323,14 @@ int32_t jointPoll(JOINT_HANDLE h, uint8_t* buf) {
     if (len < WARNING_BUFS) {
         if (pJoint->jointBufUnderflowHandler)
             pJoint->jointBufUnderflowHandler(pJoint, len);
-        else return -1; //Sevo stopped
+//        else return -1; //Sevo stopped
     }
     if (len == 0) {//empty
-        return -1;
+        return MR_ERROR_QXMTEMPTY;
     }
     memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
     pJoint->txQueFront = (pJoint->txQueFront+1)%MAX_BUFS;
-    return 0;
+    return MR_ERROR_OK;
 }
 
 int32_t _jointSendPVTSync(Joint* pJoint) {
@@ -338,14 +338,14 @@ int32_t _jointSendPVTSync(Joint* pJoint) {
 
   if (jointPoll(pJoint, buf) == 0)
       writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
-  return 0;
+  return MR_ERROR_OK;
 }
 
 int32_t jointPeriodSend(void* tv) {
   for (int16_t i = 0; i < jointNbr; i++) {
     _jointSendPVTSync(jointStack[i]);
   }
-  return 0;
+  return MR_ERROR_OK;
 }
 
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
@@ -388,9 +388,9 @@ int32_t jointDestruct(Joint* pJoint) {
       free(pModule->writeDoneCb);
     free(pModule);
     free(pJoint);
-    return 0;
+    return MR_ERROR_OK;
   }
-  return -1;
+  return MR_ERROR_ILLDATA;
 }
 
 void jointStartServo(JOINT_HANDLE h, jQueShortHandler_t handler) {
@@ -438,14 +438,14 @@ JOINT_HANDLE jointUp(uint16_t id, void* canSend) {
 
 int32_t jointDown(JOINT_HANDLE h) {
   uint16_t i;
-  JOINT_HANDLE pJoint = h;
+  Joint* pJoint = h;
   if (!jointNbr) {
     ELOG("Joint Stack Underflow");
-    return -2;
+    return MR_ERROR_ILLDATA;
   }
   if(!pJoint) {
     ELOG("Joint is NULL");
-    return -3;
+    return MR_ERROR_ILLDATA;
   }
 
   for (i = 0; i < jointNbr; i++) {
@@ -457,25 +457,25 @@ int32_t jointDown(JOINT_HANDLE h) {
   }
   jointStack[jointNbr--] = NULL;
   jointDestruct(pJoint);
-  return 0;
+  return MR_ERROR_OK;
 }
 
 /// Get Information from Joints
 
-/// waiting for n us, if return 0, id will be stored in pJoint
+/// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
 int32_t _jointGETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	Module* pModule = (Module*)pJoint->basicModule;
     if (timeout == -1) {
 		jointRxCb[index] = callBack;
 		readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
-		return 0;
+        return MR_ERROR_OK;
 	}
 	//timeout is not INFINITE
 	if (callBack != NULL) WLOG("callback will not work");
 	if (rx_flag[index] == CMD_IN_PROGRESS) {
 		//reading in process
-		return -2;
+        return MR_ERROR_BUSY;
 	}
 	rx_flag[index] = CMD_IN_PROGRESS;
 	readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
@@ -484,43 +484,42 @@ int32_t _jointGETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, uint16_t*
 			if (data)
 				memcpy(data, (void*)&(pModule->memoryTable[index]), datLen);
 			rx_flag[index] = CMD_IDLE;
-			return 0;
+            return MR_ERROR_OK;
 		}
 		delay_us(1);
 	}
-	DLOG("TIMEOUT");
 	rx_flag[index] = CMD_IDLE;
-	return -1;
+    return MR_ERROR_TIMEOUT;
 }
 
 int32_t _jointSETTemplet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	int32_t ret;
 	Module* pModule = (Module*)pJoint->basicModule;
-    if (timeout == -1) {
+    if (timeout == -1) { //INFINITE
 		jointTxCb[index] = callBack;
 		writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
-		return 0;
+        return MR_ERROR_OK;
 	}
 	//timeout is not INFINITE
 	if (callBack != NULL) ILOG("callback will not work");
 	if (tx_flag[index] == CMD_IN_PROGRESS) {
 		//reading in process
-		return -2;
+        return MR_ERROR_BUSY;
 	}
 	tx_flag[index] = CMD_IN_PROGRESS;
 	writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
 	for (i = 0; i < timeout; i++) {
 		if (tx_flag[index] != CMD_IN_PROGRESS) {
-			if (tx_flag[index] == CMD_ACK_OK) ret = 0;
-			else if (tx_flag[index] == CMD_ACK_NOK) ret = -2;
+            if (tx_flag[index] == CMD_ACK_OK) ret = MR_ERROR_ACK1;
+            else if (tx_flag[index] == CMD_ACK_NOK) ret = MR_ERROR_ACK0;
 			tx_flag[index] = CMD_IDLE;
 			return ret;
 		}
 		delay_us(1);
 	}
 	tx_flag[index] = CMD_IDLE;
-	return -1;
+    return MR_ERROR_TIMEOUT;
 }
 
 /// waiting for n us, if return 0, id will be stored in pJoint
@@ -540,6 +539,10 @@ int32_t jointSetMode(JOINT_HANDLE pJoint, uint16_t mode, int32_t timeout, jCallb
 	if (isJointMode(mode)) {
 		return _jointSETTemplet(TAG_WORK_MODE, 2, (Joint*)pJoint, (void*)&mode, timeout, callBack);
 	}
-	return -1;
+    return MR_ERROR_ILLDATA;
+}
+
+int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, jCallback_t callBack) {
+    return _jointSETTemplet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
 }
 
