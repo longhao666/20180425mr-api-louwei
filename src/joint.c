@@ -307,43 +307,58 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
   return MR_ERROR_OK;
 }
 
-int32_t jointPush(JOINT_HANDLE h, uint8_t* buf) {
+int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
 	Joint* pJoint = (Joint*)h;
+	int32_t buf[2];
     if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
         return MR_ERROR_QXMTFULL;
     }
+	buf[0] = *pos;
+	buf[1] = *speed;
     memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
     pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
     return MR_ERROR_OK;
 }
 
-int32_t jointPoll(JOINT_HANDLE h, uint8_t* buf) {
+int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
+	Joint* pJoint = (Joint*)h;
+	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
+	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
+
+	return MR_ERROR_OK;
+}
+
+int32_t _jointGetPVTSeq(JOINT_HANDLE h, uint8_t* buf) {
 	Joint* pJoint = (Joint*)h;
 	uint16_t len = (pJoint->txQueRear+MAX_BUFS - pJoint->txQueFront)%MAX_BUFS;
     if (len < WARNING_BUFS) {
         if (pJoint->jointBufUnderflowHandler)
             pJoint->jointBufUnderflowHandler(pJoint, len);
-//        else return -1; //Sevo stopped
+        else return -2; //Sevo stopped
     }
     if (len == 0) {//empty
-        return MR_ERROR_QXMTEMPTY;
+        return -1;
     }
     memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
     pJoint->txQueFront = (pJoint->txQueFront+1)%MAX_BUFS;
-    return MR_ERROR_OK;
+    return 0;
 }
 
-int32_t _jointSendPVTSync(Joint* pJoint) {
+int32_t _jointSendPVTSeq(Joint* pJoint) {
   uint8_t buf[8];
+  int32_t ret = _jointGetPVTSeq(pJoint, buf);
 
-  if (jointPoll(pJoint, buf) == 0)
+  if (ret == 0)
       writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+  else if (ret == -1) {
+	  writeSyncMsg(pJoint->basicModule, 0x200, NULL);
+  }
   return MR_ERROR_OK;
 }
 
 int32_t jointPeriodSend(void* tv) {
   for (int16_t i = 0; i < jointNbr; i++) {
-    _jointSendPVTSync(jointStack[i]);
+    _jointSendPVTSeq(jointStack[i]);
   }
   return MR_ERROR_OK;
 }
@@ -351,8 +366,9 @@ int32_t jointPeriodSend(void* tv) {
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_SPEED_L, SYS_SPEED_H};
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
-  Module* pModule = (Module*)malloc(sizeof(Module));
-  pJoint->basicModule = (void*)pModule;
+  Module* pModule;
+  pJoint->basicModule = (Module*)malloc(sizeof(Module));
+  pModule = pJoint->basicModule;
   pModule->memoryLen = CMDMAP_LEN;
   pModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
   pModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
@@ -418,6 +434,7 @@ JOINT_HANDLE jointSelect(uint16_t id) {
 JOINT_HANDLE jointUp(uint16_t id, void* canSend) {
 	int32_t res;
 	Joint* pJoint = jointConstruct(id, (canSend_t)canSend);
+
 	if (jointNbr >= MAX_JOINTS) {
 		ELOG("Joint Stack Overflow");
 		return NULL;

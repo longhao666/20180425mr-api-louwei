@@ -80,8 +80,8 @@ JOINT_HANDLE __stdcall jointSelect(uint16_t id);  //find joint by it's ID
 void __stdcall jointStartServo(JOINT_HANDLE pJoint, jQueShortHandler_t handler);
 void __stdcall jointStopServo(JOINT_HANDLE pJoint);
 
-int32_t __stdcall jointPush(JOINT_HANDLE pJoint, uint8_t* buf);
-int32_t __stdcall jointPoll(JOINT_HANDLE pJoint, uint8_t* buf);
+int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed);
+int32_t __stdcall jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed);
 
 int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
 int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);

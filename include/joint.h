@@ -10,7 +10,7 @@ typedef uint8_t rec_t[8];
 
 typedef struct td_joint
 {
-	void* basicModule;
+	Module* basicModule;
 	uint16_t* jointId;
 	uint16_t* jointType;
 	uint8_t isOnline;

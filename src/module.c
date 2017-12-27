@@ -9,10 +9,17 @@ int32_t registerReadCallback(Module* d, uint8_t index, mCallback_t callBack) {
 
 int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData) {
   Message txMsg = Message_Initializer;
-  txMsg.cob_id = *(d->moduleId) + prefix;
-  txMsg.rtr = 0;
-  txMsg.len = 8;
-  memcpy((void*)(txMsg.data), pSourceData, 8);
+  if (pSourceData == NULL) {
+	  txMsg.cob_id = *(d->moduleId) + prefix;
+	  txMsg.rtr = 0;
+	  txMsg.len = 0;
+  }
+  else {
+	  txMsg.cob_id = *(d->moduleId) + prefix;
+	  txMsg.rtr = 0;
+	  txMsg.len = 8;
+	  memcpy((void*)(txMsg.data), pSourceData, 8);
+  }
 
   d->canSend(&txMsg);
   return 0;
