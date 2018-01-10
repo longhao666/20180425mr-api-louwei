@@ -322,6 +322,8 @@ int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
 
 int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
 	Joint* pJoint = (Joint*)h;
+    if (!pJoint)
+        return MR_ERROR_ILLDATA;
 	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
 	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
 

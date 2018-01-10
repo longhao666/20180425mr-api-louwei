@@ -71,6 +71,7 @@ TARGET_LINK_LIBRARIES(${LIB_NAME} ${CAN_DRIVER_LIB})
 TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm)
 
 ADD_SUBDIRECTORY(./examples/test1 test1)
+ADD_SUBDIRECTORY(./examples/test2 test2)
 #ADD_EXECUTABLE(test1 ./examples/test1/test1.c ${SRCS})
 #TARGET_LINK_LIBRARIES(test1 ${LIB_NAME})
 

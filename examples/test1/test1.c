@@ -7,10 +7,10 @@
 #include "mrapi.h"
 
 int32_t fillbuf(void* handle, uint16_t len) {
-    uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint32_t pos, spd;
     uint16_t i;
     for (i = len; i < MAX_BUFS; i++)
-        jointPush(handle, buf);
+        jointPush(handle, &pos, &spd);
 }
 
 // the signal handler for manual break Ctrl-C
