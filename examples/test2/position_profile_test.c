@@ -82,7 +82,9 @@ int main()
 
 
 	joinMaster(0);
-//	system("pause");
+#ifdef _WINDOWS
+	system("pause");
+#endif
 
     return 0;
 }

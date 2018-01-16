@@ -307,7 +307,7 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
   return MR_ERROR_OK;
 }
 
-int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
+int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
 	int32_t buf[2];
     if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
@@ -320,7 +320,8 @@ int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
     return MR_ERROR_OK;
 }
 
-int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
+///从内存表获取实际位置和实际速度
+int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
     if (!pJoint)
         return MR_ERROR_ILLDATA;
@@ -330,31 +331,22 @@ int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed) {
 	return MR_ERROR_OK;
 }
 
-int32_t _jointGetPVTSeq(JOINT_HANDLE h, uint8_t* buf) {
-	Joint* pJoint = (Joint*)h;
-	uint16_t len = (pJoint->txQueRear+MAX_BUFS - pJoint->txQueFront)%MAX_BUFS;
-    if (len < WARNING_BUFS) {
-        if (pJoint->jointBufUnderflowHandler)
-            pJoint->jointBufUnderflowHandler(pJoint, len);
-        else return -2; //Sevo stopped
-    }
-    if (len == 0) {//empty
-        return -1;
-    }
-    memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
-    pJoint->txQueFront = (pJoint->txQueFront+1)%MAX_BUFS;
-    return 0;
-}
-
-int32_t _jointSendPVTSeq(Joint* pJoint) {
+int32_t _jointSendPVTSeq(Joint* h) {
   uint8_t buf[8];
-  int32_t ret = _jointGetPVTSeq(pJoint, buf);
-
-  if (ret == 0)
-      writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
-  else if (ret == -1) {
+  Joint* pJoint = (Joint*)h;
+  uint16_t len = (pJoint->txQueRear + MAX_BUFS - pJoint->txQueFront) % MAX_BUFS;
+  if (len < WARNING_BUFS) {
+	  if (pJoint->jointBufUnderflowHandler)
+		  pJoint->jointBufUnderflowHandler(pJoint, len);
+	  else return -2; //Sevo stopped
+  }
+  if (len == 0) {//empty
 	  writeSyncMsg(pJoint->basicModule, 0x200, NULL);
   }
+  memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
+  pJoint->txQueFront = (pJoint->txQueFront + 1) % MAX_BUFS;
+  writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+
   return MR_ERROR_OK;
 }
 

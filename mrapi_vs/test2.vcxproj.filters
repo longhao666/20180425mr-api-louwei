@@ -18,7 +18,7 @@
     <ClCompile Include="..\examples\test2\MC_PositionProfile.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\examples\test2\position profile test.c">
+    <ClCompile Include="..\examples\test2\position_profile_test.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

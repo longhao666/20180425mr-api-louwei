@@ -7,8 +7,9 @@
 int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
     uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     uint16_t i;
+	int32_t pos, speed;
     for (i = len; i < MAX_BUFS; i++)
-        jointPush(handle, buf);
+        jointPush(handle, &pos, &speed);
 	return 0;
 }
 
