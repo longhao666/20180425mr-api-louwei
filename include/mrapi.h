@@ -34,12 +34,12 @@
 // Represent the MRAPI error and status codes
 //
 #define MR_ERROR_OK                0x00000U  // No error
-#define MR_ERROR_TIMEOUT           0x00001U  // No error
-#define MR_ERROR_BUSY              0x00002U  // Bus error: an error counter reached the 'light' limit
-#define MR_ERROR_ACK0              0x00004U  // Bus error: an error counter reached the 'heavy' limit
-#define MR_ERROR_ACK1              0x00008U  // Bus error: an error counter reached the 'heavy' limit
+#define MR_ERROR_TIMEOUT           0x00001U  // Read/Write timeout error
+#define MR_ERROR_BUSY              0x00002U  // Read/Write in progress
+#define MR_ERROR_ACK0              0x00004U  // Write acknowlogy 0
+#define MR_ERROR_ACK1              0x00008U  // Write acknowlogy 1
 #define MR_ERROR_QXMTFULL          0x00010U  // Transmit queue is full
-#define MR_ERROR_QXMTEMPTY         0x00020U  // Transmit queue is full
+#define MR_ERROR_QXMTEMPTY         0x00020U  // Transmit queue is empty
 #define MR_ERROR_ILLDATA           0x00040U  // Invalid data, function, or action
 
 //错误字节MASK定义
