@@ -331,7 +331,7 @@ int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current
 	return MR_ERROR_OK;
 }
 
-int32_t _jointSendPVTSeq(Joint* h) {
+inline int32_t _jointSendPVTSeq(Joint* h) {
   uint8_t buf[8];
   Joint* pJoint = (Joint*)h;
   uint16_t len = (pJoint->txQueRear + MAX_BUFS - pJoint->txQueFront) % MAX_BUFS;
@@ -442,7 +442,7 @@ JOINT_HANDLE jointUp(uint16_t id, void* canSend) {
 	if ((res == 0) && isJointType(*(pJoint->jointType))) {
 		return (JOINT_HANDLE)pJoint;
 	}
-	jointStack[jointNbr--] = NULL; // delete from stack
+	jointStack[--jointNbr] = NULL; // delete from stack
 	jointDestruct(pJoint);
 	return NULL;
 }
