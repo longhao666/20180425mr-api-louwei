@@ -5,6 +5,7 @@
 
 #define CMDMAP_LEN            160    //
 
+/// proctocol definition
 //系统状态相关
 #define SYS_ID                0x01    //驱动器ID
 #define SYS_MODEL_TYPE        0x02    //驱动器型号

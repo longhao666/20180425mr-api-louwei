@@ -9,7 +9,7 @@ int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
     uint16_t i;
 	int32_t pos, speed;
     for (i = len; i < MAX_BUFS; i++)
-        jointPush(handle, &pos, &speed);
+        jointPush(handle, &pos, &speed, NULL);
 	return 0;
 }
 

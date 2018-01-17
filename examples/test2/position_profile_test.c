@@ -43,7 +43,7 @@ int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
 			float v = position_pro_strut.v;
 			buf[0] = lroundf(q);
 			buf[1] = lroundf(v);
-			jointPush(handle, &buf[0], &buf[1]);
+			jointPush(handle, &buf[0], &buf[1], NULL);
 		}
 	}
 	return 0;
@@ -70,7 +70,7 @@ int main()
 		//jointGetPosition(joint1, NULL, 1000, NULL);
 	}
 	do {
-		jointPoll(joint1, &realPos, NULL);
+		jointPoll(joint1, &realPos, NULL, NULL);
 #if defined Linux
     sleep(1000);
 #endif

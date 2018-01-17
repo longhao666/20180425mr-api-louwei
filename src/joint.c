@@ -178,24 +178,26 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
 
 int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
-	int32_t buf[2];
+	int32_t buf[3];
     if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
         return MR_ERROR_QXMTFULL;
     }
 	buf[0] = *pos;
 	buf[1] = *speed;
-    memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
+	buf[2] = *current;
+	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
     pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
     return MR_ERROR_OK;
 }
 
-///从内存表获取实际位置和实际速度
+/// 从内存表获取实际位置和实际电流
 int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
     if (!pJoint)
         return MR_ERROR_ILLDATA;
 	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
 	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
+	if (current) memcpy(current, &(pJoint->basicModule->memoryTable[SYS_CURRENT_L]), 4);
 
 	return MR_ERROR_OK;
 }
@@ -227,7 +229,7 @@ int32_t jointPeriodSend(void* tv) {
 }
 
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
-  uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_SPEED_L, SYS_SPEED_H};
+  uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_CURRENT_L, SYS_CURRENT_H};
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
   Module* pModule;
   pJoint->basicModule = (Module*)malloc(sizeof(Module));
@@ -345,7 +347,7 @@ int32_t jointDown(JOINT_HANDLE h) {
 /// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
 int32_t jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
-	Module* pModule = (Module*)pJoint->basicModule;
+	Module* pModule = pJoint->basicModule;
     if (timeout == -1) {
 		jointRxCb[index] = callBack;
 		readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
@@ -371,14 +373,18 @@ int32_t jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32
 	rx_flag[index] = CMD_IDLE;
     return MR_ERROR_TIMEOUT;
 }
-
+/// 如果timeout为infinite且callBack为空，则调用无返回的写函数writeEntryNR
 int32_t jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	int32_t ret;
-	Module* pModule = (Module*)pJoint->basicModule;
+	Module* pModule = pJoint->basicModule;
     if (timeout == -1) { //INFINITE
-		jointTxCb[index] = callBack;
-		writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
+		if (callBack == NULL) {
+			writeEntryNR(pModule, index, data, datLen);
+		} else {
+			jointTxCb[index] = callBack;
+			writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
+		}
         return MR_ERROR_OK;
 	}
 	//timeout is not INFINITE
@@ -409,6 +415,10 @@ int32_t jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallba
 
 int32_t jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
 	return jointGet(SYS_MODEL_TYPE, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetError(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return jointGet(SYS_ERROR, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
 int32_t jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
