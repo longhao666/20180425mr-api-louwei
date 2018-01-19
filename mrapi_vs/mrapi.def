@@ -12,6 +12,7 @@ EXPORTS
 	jointStopServo @10
 	jointPush @11
 	jointPoll @12
+	jointPollScope @121
 	jointGetId @13
 	jointGetType @14
 	jointGetError @141

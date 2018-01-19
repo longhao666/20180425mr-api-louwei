@@ -193,11 +193,23 @@ int32_t jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current
 /// 从内存表获取实际位置和实际电流
 int32_t jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
-    if (!pJoint)
-        return MR_ERROR_ILLDATA;
+	if (!pJoint)
+		return MR_ERROR_ILLDATA;
 	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
 	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
 	if (current) memcpy(current, &(pJoint->basicModule->memoryTable[SYS_CURRENT_L]), 4);
+
+	return MR_ERROR_OK;
+}
+
+/// 从内存表获取实际位置和实际电流
+int32_t jointPollScope(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
+	Joint* pJoint = (Joint*)h;
+	if (!pJoint)
+		return MR_ERROR_ILLDATA;
+	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SCP_TAGPOS_L]), 8);
+	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SCP_TAGSPD_L]), 8);
+	if (current) memcpy(current, &(pJoint->basicModule->memoryTable[SCP_TAGCUR_L]), 8);
 
 	return MR_ERROR_OK;
 }

@@ -22,28 +22,28 @@ ADD_DEFINITIONS(-DLinux)
 INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/include)
 
 IF(${USE_CAN_DRIVER} MATCHES "pcanbasic")
-	MESSAGE("using pcanbasic")
-	ADD_DEFINITIONS(-DPCAN_BASIC)
+        MESSAGE("using pcanbasic")
+        ADD_DEFINITIONS(-DPCAN_BASIC)
         FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib  NO_DEFAULT_PATH)
-	MESSAGE(${CAN_DRIVER_LIB})
-	INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
+        MESSAGE(${CAN_DRIVER_LIB})
+        INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
         INCLUDE_DIRECTORIES(/usr/include)
-	SET(DRIVER_SRC
-		${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
+        SET(DRIVER_SRC
+                ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
                 ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_linux.c
-	)
+        )
 ELSE(${USE_CAN_DRIVER} MATCHES "pcan")
-	MESSAGE("using peak driver")
-	ADD_DEFINITIONS(-DCAN_PEAK_LINUX)
-	FIND_LIBRARY(CAN_DRIVER_LIB		 NAMES pcan PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
-	INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux)
-	SET(DRIVER_SRC
-		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.c
-		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/thread_linux.c
-	)
-	SET(DRIVER_INCS
-		${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.h
-	)
+        MESSAGE("using peak driver")
+        ADD_DEFINITIONS(-DCAN_PEAK_LINUX)
+        FIND_LIBRARY(CAN_DRIVER_LIB		 NAMES pcan PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
+        INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux)
+        SET(DRIVER_SRC
+                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.c
+                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/thread_linux.c
+        )
+        SET(DRIVER_INCS
+                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.h
+        )
 ENDIF()
 
 #LINK_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/INSTALL/lib/)

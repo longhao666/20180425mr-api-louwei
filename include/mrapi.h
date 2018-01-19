@@ -90,6 +90,7 @@ void __stdcall jointStopServo(JOINT_HANDLE pJoint);
 
 int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current);
 int32_t __stdcall jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current);
+int32_t __stdcall jointPollScope(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current);
 
 int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
 int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
