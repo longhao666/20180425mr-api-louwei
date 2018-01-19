@@ -130,15 +130,6 @@
 #define SCP_MEAPOS_L          0x9C    //实际位置数据集
 #define SCP_MEAPOS_H          0x9D    //实际位置数据集
 
-//示波器记录对象MASK定义
-#define MASK_TAGCUR         0x0001    //记录目标电流MASK
-#define MASK_MEACUR         0x0002    //记录实际电流MASK
-#define MASK_TAGSPD         0x0004    //记录目标速度MASK
-#define MASK_MEASPD         0x0008    //记录实际速度MASK
-#define MASK_TAGPOS         0x0010    //记录目标位置MASK
-#define MASK_MEAPOS         0x0020    //记录实际位置MASK
-
-
 typedef uint8_t rec_t[8];
 
 typedef struct td_joint
@@ -155,7 +146,16 @@ typedef struct td_joint
 }Joint;
 
 ///For advanced users
-int32_t jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
-int32_t jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
+#ifdef __cplusplus
+extern "C" {
+#define _DEF_ARG =0
+#else
+#define _DEF_ARG
+#endif
+int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
+#ifdef __cplusplus
+}
+#endif
 #endif
 

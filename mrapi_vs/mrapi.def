@@ -52,5 +52,7 @@ EXPORTS
 	jointSetPositionP @48
 	jointSetPositionDs @49
 	jointSetScpMask @50
+	jointGet @51
+	jointSet @52
 
 
