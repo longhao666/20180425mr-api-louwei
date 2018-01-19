@@ -1,4 +1,4 @@
-Thumbs.db
+*.db
 *.opendb
 *.dll
 *.lib
