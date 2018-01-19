@@ -26,7 +26,7 @@ void _canReadISR(Message* msg) {
       canDispatch(pJoint->basicModule, msg);
 }
 
-int32_t startMaster(uint8_t masterId) {
+int32_t __stdcall startMaster(uint8_t masterId) {
   // Open and Initiallize CAN Port
   hCan[masterId] = canOpen_driver("pcan1", "1M");
   // Use CAN1 as the device
@@ -40,13 +40,13 @@ int32_t startMaster(uint8_t masterId) {
   return MR_ERROR_OK;
 }
 
-int32_t stopMaster(uint8_t masterId) {
+int32_t __stdcall stopMaster(uint8_t masterId) {
   StopTimerLoop();
   DestroyReceiveTask(&hReceiveTask[masterId]);
   return MR_ERROR_OK;
 }
 
-void* masterLoadSendFunction(uint8_t masterId) {
+void* __stdcall masterLoadSendFunction(uint8_t masterId) {
 	switch (masterId) {
 	case 0: return (void*)can1Send;
 	case 1: return (void*)can2Send;
@@ -56,13 +56,13 @@ void* masterLoadSendFunction(uint8_t masterId) {
 	return NULL;
 }
 
-int32_t joinMaster(uint8_t masterId) {
+int32_t __stdcall joinMaster(uint8_t masterId) {
   WaitReceiveTaskEnd(&hReceiveTask[masterId]);
   DestroyReceiveTask(&hReceiveTask[masterId]);
   return MR_ERROR_OK;
 }
 
-int32_t setControlLoopFreq(int32_t hz) {
+int32_t __stdcall setControlLoopFreq(int32_t hz) {
   float val = 0;
   if (hz != -1) {
       val = 1000000.0f/(float)hz;

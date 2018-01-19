@@ -79,7 +79,7 @@ int32_t __stdcall startMaster(uint8_t masterId);
 int32_t __stdcall stopMaster(uint8_t masterId);
 int32_t __stdcall joinMaster(uint8_t masterId);
 int32_t __stdcall setControlLoopFreq(int32_t hz);
-void* __stdcall masterLoadSendFunction(uint8_t masterId);
+void*   __stdcall masterLoadSendFunction(uint8_t masterId);
 
 JOINT_HANDLE __stdcall jointUp(uint16_t id, void* canSend); //construct Joint and put it in joint stack
 int32_t      __stdcall jointDown(JOINT_HANDLE pJoint);          //destruct joint and remove it from joint stack
