@@ -1,4 +1,5 @@
 Thumbs.db
+*.opendb
 *.dll
 *.lib
 *.a
@@ -35,3 +36,4 @@ _DEL/
 build/
 ipch/
 x64/
+Debug/
