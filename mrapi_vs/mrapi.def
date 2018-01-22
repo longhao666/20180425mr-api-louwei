@@ -4,7 +4,6 @@ EXPORTS
 	stopMaster @2
 	joinMaster @3
 	setControlLoopFreq @4
-	masterLoadSendFunction @5
 	jointUp @6
 	jointDown @7
 	jointSelect @8

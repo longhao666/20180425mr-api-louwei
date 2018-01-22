@@ -141,6 +141,8 @@ const uint8_t joint_accessType[10][16] =
 #define CMD_ACK_NOK      2
 #define CMD_IDLE        0
 
+extern canSend_t hCansendHandler[MAX_CAN_DEVICES];
+
 jCallback_t jointRxCb[CMDMAP_LEN] = { NULL };  // call back of read Joint ID
 jCallback_t jointTxCb[CMDMAP_LEN] = { NULL };  // call back of read Joint ID
 Joint* jointStack[MAX_JOINTS];    // online joint stack
@@ -178,15 +180,15 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
 
 int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
 	Joint* pJoint = (Joint*)h;
-	int32_t buf[3];
-    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
+	int32_t buf[3] = {0};
+    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
         return MR_ERROR_QXMTFULL;
     }
-	buf[0] = *pos;
-	buf[1] = *speed;
-	buf[2] = *current;
+	if (pos) buf[0] = *pos;
+	if (speed) buf[1] = *speed;
+	if (current) buf[2] = *current;
 	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
-    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
+    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_SERVO_BUFS;
     return MR_ERROR_OK;
 }
 
@@ -217,8 +219,8 @@ int32_t __stdcall jointPollScope(JOINT_HANDLE h, int32_t* pos, int32_t* speed, i
 inline int32_t _jointSendPVTSeq(Joint* h) {
   uint8_t buf[8];
   Joint* pJoint = (Joint*)h;
-  uint16_t len = (pJoint->txQueRear + MAX_BUFS - pJoint->txQueFront) % MAX_BUFS;
-  if (len < WARNING_BUFS) {
+  uint16_t len = (pJoint->txQueRear + MAX_SERVO_BUFS - pJoint->txQueFront) % MAX_SERVO_BUFS;
+  if (len < WARNING_SERVO_BUFS) {
 	  if (pJoint->jointBufUnderflowHandler)
 		  pJoint->jointBufUnderflowHandler(pJoint, len);
 	  else return -2; //Sevo stopped
@@ -227,7 +229,7 @@ inline int32_t _jointSendPVTSeq(Joint* h) {
 	  writeSyncMsg(pJoint->basicModule, 0x200, NULL);
   }
   memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
-  pJoint->txQueFront = (pJoint->txQueFront + 1) % MAX_BUFS;
+  pJoint->txQueFront = (pJoint->txQueFront + 1) % MAX_SERVO_BUFS;
   writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
 
   return MR_ERROR_OK;
@@ -262,7 +264,7 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   pJoint->isOnline = JOINT_OFFLINE;
   pJoint->txQueFront = 0;
   pJoint->txQueRear = 0;
-  memset((void*)(pJoint->txQue), 0, sizeof(rec_t)*MAX_BUFS);
+  memset((void*)(pJoint->txQue), 0, sizeof(rec_t)*MAX_SERVO_BUFS);
   pJoint->jointBufUnderflowHandler = NULL;
 
   setSyncReceiveMap(pJoint->basicModule, indexMap);
@@ -308,9 +310,9 @@ JOINT_HANDLE __stdcall jointSelect(uint16_t id) {
   return NULL;
 }
 
-JOINT_HANDLE __stdcall jointUp(uint16_t id, void* canSend) {
+JOINT_HANDLE __stdcall jointUp(uint16_t joindId, uint8_t masterId) {
 	int32_t res;
-	Joint* pJoint = jointConstruct(id, (canSend_t)canSend);
+	Joint* pJoint = jointConstruct(joindId, (canSend_t)hCansendHandler[masterId]);
 
 	if (jointNbr >= MAX_JOINTS) {
 		ELOG("Joint Stack Overflow");

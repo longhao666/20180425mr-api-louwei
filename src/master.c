@@ -6,14 +6,18 @@
 int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
-// Max 4 CAN Ports
 CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
-TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES];
 
-uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg);}
+uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg); }
 uint8_t can2Send(Message* msg) { return canSend_driver(hCan[1], msg); }
 uint8_t can3Send(Message* msg) { return canSend_driver(hCan[2], msg); }
 uint8_t can4Send(Message* msg) { return canSend_driver(hCan[3], msg); }
+uint8_t can5Send(Message* msg) {/* return canSend_driver(hCan[3], msg); */}
+uint8_t can6Send(Message* msg) {/* return canSend_driver(hCan[3], msg); */}
+
+// Max 4 CAN Ports
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES];
+canSend_t hCansendHandler[MAX_CAN_DEVICES] = { can1Send, can2Send, can3Send, can4Send };
 
 /// CAN read thread or interrupt
 void _canReadISR(Message* msg) {
@@ -26,11 +30,14 @@ void _canReadISR(Message* msg) {
       canDispatch(pJoint->basicModule, msg);
 }
 
-int32_t __stdcall startMaster(uint8_t masterId) {
+int32_t __stdcall startMaster(char* busname, uint8_t masterId) {
   // Open and Initiallize CAN Port
-  hCan[masterId] = canOpen_driver("pcan1", "1M");
+  if (hCan[masterId] != 0) {
+	  ELOG("masterId %d has been combined to CAN device HANDLE 0x%X", masterId, hCan[masterId]);
+	  return MR_ERROR_ILLDATA;
+  }
+  hCan[masterId] = canOpen_driver(busname, "1M");
   // Use CAN1 as the device
-  ILOG("Hello world");
 
   // Create and Start thread to read CAN message
   CreateReceiveTask(hCan[masterId], &hReceiveTask[masterId], _canReadISR);
@@ -41,20 +48,21 @@ int32_t __stdcall startMaster(uint8_t masterId) {
 }
 
 int32_t __stdcall stopMaster(uint8_t masterId) {
+  hCan[masterId] = 0;
   StopTimerLoop();
   DestroyReceiveTask(&hReceiveTask[masterId]);
   return MR_ERROR_OK;
 }
 
-void* __stdcall masterLoadSendFunction(uint8_t masterId) {
-	switch (masterId) {
-	case 0: return (void*)can1Send;
-	case 1: return (void*)can2Send;
-	case 2: return (void*)can3Send;
-	case 3: return (void*)can4Send;
-	}
-	return NULL;
-}
+//void* __stdcall masterLoadSendFunction(uint8_t masterId) {
+//	switch (masterId) {
+//	case 0: return (void*)can1Send;
+//	case 1: return (void*)can2Send;
+//	case 2: return (void*)can3Send;
+//	case 3: return (void*)can4Send;
+//	}
+//	return NULL;
+//}
 
 int32_t __stdcall joinMaster(uint8_t masterId) {
   WaitReceiveTaskEnd(&hReceiveTask[masterId]);

@@ -10,12 +10,10 @@
 #include <Windows.h>
 #endif
 #include "mrapi.h"
-#ifndef LOG_LEVEL
+
+#define LOG_MSG_ON
 #define LOG_LEVEL 1
-#endif
-#ifndef LOG_APPEND
 #define LOG_APPEND 1
-#endif
 
 #define PLOG(level, ...) \
     {						\
@@ -75,8 +73,8 @@
 #define ELOG( ...) 
 #endif
 
-FILE *logp;
-char sstime[256];
+extern FILE *logp;
+extern char sstime[256];
 
 void loggerInit(FILE **fp);
 void loggerTime(char*);

@@ -35,17 +35,17 @@ int32_t Pos_LinearRampPro_Init(void)
 
 int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
 	int32_t buf[2];
-	uint16_t i;
+	int32_t ret;
 	static int j = 0;
-	for (i = len; i < MAX_BUFS; i++) {
+	do {
 		if (j < position_pro_strut.steps) {
 			float q = position_profile_caculate(&position_pro_strut, j++);
 			float v = position_pro_strut.v;
 			buf[0] = lroundf(q);
 			buf[1] = lroundf(v);
-			jointPush(handle, &buf[0], &buf[1], NULL);
+			ret = jointPush(handle, &buf[0], &buf[1], NULL);
 		}
-	}
+	} while (ret == MR_ERROR_OK);
 	return 0;
 }
 
@@ -55,11 +55,11 @@ int main()
 	int32_t goalPos = 0;
 	int32_t realPos = 0;
 
-	startMaster(0);
+	startMaster("pcanusb1",0);
 	printf("Master Started\n");
 
 	setControlLoopFreq(200);
-	joint1 = jointUp(0x01, masterLoadSendFunction(0));
+	joint1 = jointUp(0x01, MASTER(0));
 	if (joint1) {
 		goalPos = Pos_LinearRampPro_Init();
 		if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == MR_ERROR_ACK1) {

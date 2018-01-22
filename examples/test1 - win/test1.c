@@ -6,10 +6,11 @@
 
 int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
     uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    uint16_t i;
+    int32_t ret;
 	int32_t pos, speed;
-    for (i = len; i < MAX_BUFS; i++)
-        jointPush(handle, &pos, &speed, NULL);
+	do {
+		ret = jointPush(handle, &pos, &speed, NULL);
+	} while (ret == MR_ERROR_OK);
 	return 0;
 }
 
@@ -28,11 +29,11 @@ int main(int argc, char const *argv[])
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    startMaster(0);
+    startMaster("pcanusb1", 0);
     printf("Master Started\n");
     
     setControlLoopFreq(200);
-    joint1 = jointUp(0x01, masterLoadSendFunction(0));
+    joint1 = jointUp(0x01, MASTER(0));
     if (joint1) {
         if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
 			printf("Set mode to speed loop\n");

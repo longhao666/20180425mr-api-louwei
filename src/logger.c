@@ -1,5 +1,8 @@
 ﻿#include "logger.h"
 
+FILE *logp;
+char sstime[256];
+
 void loggerInit(FILE **fp)
 {
 #if  LOG_APPEND == 0
