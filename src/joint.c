@@ -187,7 +187,7 @@ int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_
 	if (pos) buf[0] = *pos;
 	if (speed) buf[1] = *speed;
 	if (current) buf[2] = *current;
-	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
+	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 12);
     pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_SERVO_BUFS;
     return MR_ERROR_OK;
 }
@@ -216,8 +216,8 @@ int32_t __stdcall jointPollScope(JOINT_HANDLE h, int32_t* pos, int32_t* speed, i
 	return MR_ERROR_OK;
 }
 
-inline int32_t _jointSendPVTSeq(Joint* h) {
-  uint8_t buf[8];
+int32_t _jointSendPVTSeq(Joint* h) {
+  uint8_t buf[12];
   Joint* pJoint = (Joint*)h;
   uint16_t len = (pJoint->txQueRear + MAX_SERVO_BUFS - pJoint->txQueFront) % MAX_SERVO_BUFS;
   if (len < WARNING_SERVO_BUFS) {
@@ -228,8 +228,9 @@ inline int32_t _jointSendPVTSeq(Joint* h) {
   if (len == 0) {//empty
 	  writeSyncMsg(pJoint->basicModule, 0x200, NULL);
   }
-  memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
+  memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 12);
   pJoint->txQueFront = (pJoint->txQueFront + 1) % MAX_SERVO_BUFS;
+  // only first 8 bytes will be send to joint
   writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
 
   return MR_ERROR_OK;

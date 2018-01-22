@@ -12,131 +12,131 @@
 
 
 /// proctocol definition
-//ÏµÍ³×´Ì¬Ïà¹Ø
-#define SYS_ID                0x01    //Çı¶¯Æ÷ID
-#define SYS_MODEL_TYPE        0x02    //Çı¶¯Æ÷ĞÍºÅ
-#define SYS_FW_VERSION        0x03    //¹Ì¼ş°æ±¾
-#define SYS_ERROR             0x04    //´íÎó´úÂë
-#define SYS_VOLTAGE           0x05    //ÏµÍ³µçÑ¹
-#define SYS_TEMP              0x06    //ÏµÍ³ÎÂ¶È
-#define SYS_REDU_RATIO        0x07    //Ä£¿é¼õËÙ±È
-//#define SYS_BAUDRATE_232      0x08    //232¶Ë¿Ú²¨ÌØÂÊ
-#define SYS_BAUDRATE_CAN      0x09    //CAN×ÜÏß²¨ÌØÂÊ
-#define SYS_ENABLE_DRIVER     0x0a    //Çı¶¯Æ÷Ê¹ÄÜ±êÖ¾
-#define SYS_ENABLE_ON_POWER   0x0b    //ÉÏµçÊ¹ÄÜÇı¶¯Æ÷±êÖ¾
-#define SYS_SAVE_TO_FLASH     0x0c    //±£´æÊı¾İµ½Flash±êÖ¾
-//#define SYS_DEMA_ABSPOS       0x0d    //×Ô¶¯±ê¶¨¾ø¶ÔÎ»ÖÃ±êÖ¾
-#define SYS_SET_ZERO_POS      0x0e    //½«µ±Ç°Î»ÖÃÉèÖÃÎªÁãµã±êÖ¾
-#define SYS_CLEAR_ERROR       0x0f    //Çå³ı´íÎó±êÖ¾
+//ç³»ç»ŸçŠ¶æ€ç›¸å…³
+#define SYS_ID                0x01    //é©±åŠ¨å™¨ID
+#define SYS_MODEL_TYPE        0x02    //é©±åŠ¨å™¨å‹å·
+#define SYS_FW_VERSION        0x03    //å›ºä»¶ç‰ˆæœ¬
+#define SYS_ERROR             0x04    //é”™è¯¯ä»£ç 
+#define SYS_VOLTAGE           0x05    //ç³»ç»Ÿç”µå‹
+#define SYS_TEMP              0x06    //ç³»ç»Ÿæ¸©åº¦
+#define SYS_REDU_RATIO        0x07    //æ¨¡å—å‡é€Ÿæ¯”
+//#define SYS_BAUDRATE_232      0x08    //232ç«¯å£æ³¢ç‰¹ç‡
+#define SYS_BAUDRATE_CAN      0x09    //CANæ€»çº¿æ³¢ç‰¹ç‡
+#define SYS_ENABLE_DRIVER     0x0a    //é©±åŠ¨å™¨ä½¿èƒ½æ ‡å¿—
+#define SYS_ENABLE_ON_POWER   0x0b    //ä¸Šç”µä½¿èƒ½é©±åŠ¨å™¨æ ‡å¿—
+#define SYS_SAVE_TO_FLASH     0x0c    //ä¿å­˜æ•°æ®åˆ°Flashæ ‡å¿—
+//#define SYS_DEMA_ABSPOS       0x0d    //è‡ªåŠ¨æ ‡å®šç»å¯¹ä½ç½®æ ‡å¿—
+#define SYS_SET_ZERO_POS      0x0e    //å°†å½“å‰ä½ç½®è®¾ç½®ä¸ºé›¶ç‚¹æ ‡å¿—
+#define SYS_CLEAR_ERROR       0x0f    //æ¸…é™¤é”™è¯¯æ ‡å¿—
 
-#define SYS_CURRENT_L         0x10    //µ±Ç°µçÁ÷µÍ16Î»£¨mA£©
-#define SYS_CURRENT_H         0x11    //µ±Ç°µçÁ÷¸ß16Î»£¨mA£©
-#define SYS_SPEED_L           0x12    //µ±Ç°ËÙ¶ÈµÍ16Î»£¨units/s£©
-#define SYS_SPEED_H           0x13    //µ±Ç°ËÙ¶È¸ß16Î»£¨units/s£©
-#define SYS_POSITION_L        0x14    //µ±Ç°Î»ÖÃµÍ16Î»£¨units£©
-#define SYS_POSITION_H        0x15    //µ±Ç°Î»ÖÃ¸ß16Î»£¨units£©
-#define SYS_POTEN_VALUE       0x16    //Êı×ÖµçÎ»Æ÷Öµ
-#define SYS_ZERO_POS_OFFSET_L 0x17    //ÁãµãÎ»ÖÃÆ«ÒÆÁ¿µÍ16Î»£¨units£©
-#define SYS_ZERO_POS_OFFSET_H 0x18    //ÁãµãÎ»ÖÃÆ«ÒÆÁ¿¸ß16Î»£¨units£©
+#define SYS_CURRENT_L         0x10    //å½“å‰ç”µæµä½16ä½ï¼ˆmAï¼‰
+#define SYS_CURRENT_H         0x11    //å½“å‰ç”µæµé«˜16ä½ï¼ˆmAï¼‰
+#define SYS_SPEED_L           0x12    //å½“å‰é€Ÿåº¦ä½16ä½ï¼ˆunits/sï¼‰
+#define SYS_SPEED_H           0x13    //å½“å‰é€Ÿåº¦é«˜16ä½ï¼ˆunits/sï¼‰
+#define SYS_POSITION_L        0x14    //å½“å‰ä½ç½®ä½16ä½ï¼ˆunitsï¼‰
+#define SYS_POSITION_H        0x15    //å½“å‰ä½ç½®é«˜16ä½ï¼ˆunitsï¼‰
+#define SYS_POTEN_VALUE       0x16    //æ•°å­—ç”µä½å™¨å€¼
+#define SYS_ZERO_POS_OFFSET_L 0x17    //é›¶ç‚¹ä½ç½®åç§»é‡ä½16ä½ï¼ˆunitsï¼‰
+#define SYS_ZERO_POS_OFFSET_H 0x18    //é›¶ç‚¹ä½ç½®åç§»é‡é«˜16ä½ï¼ˆunitsï¼‰
 
-//µç»úÏà¹ØĞÅÏ¢
-#define MOT_RES               0x20    //µç»úÄÚ×è
-#define MOT_INDUC             0x21    //µç»úµç¸Ğ
-#define MOT_RATED_VOL         0x22    //µç»ú¶î¶¨µçÑ¹
-#define MOT_RATED_CUR         0x23    //µç»ú¶î¶¨µçÁ÷
-//#define MOT_ENC_LINES         0x24    //ÂëÅÌÏßÊı
-//#define MOT_HALL_VALUE        0x25    //µ±Ç°»ô¶û×´Ì¬
-#define MOT_ST_DAT            0x26    //¾ø¶Ô±àÂëÆ÷µ¥È¦Êı¾İ
-#define MOT_MT_DAT            0x27    //¾ø¶Ô±àÂëÆ÷¶àÈ¦Êı¾İ
-#define MOT_ENC_STA           0x28    //¾ø¶Ô±àÂëÆ÷×´Ì¬¼Ä´æÆ÷
-#define BAT_VOLT              0x29    //±àÂëÆ÷µç³ØµçÑ¹ *10mV
-#define ACC_X                 0x2A    //¼ÓËÙ¶È¼ÆxÖá *1000mg
-#define ACC_Y                 0x2B    //¼ÓËÙ¶È¼ÆyÖá *1000mg
-#define ACC_Z                 0x2C    //¼ÓËÙ¶È¼ÆzÖá *1000mg
+//ç”µæœºç›¸å…³ä¿¡æ¯
+#define MOT_RES               0x20    //ç”µæœºå†…é˜»
+#define MOT_INDUC             0x21    //ç”µæœºç”µæ„Ÿ
+#define MOT_RATED_VOL         0x22    //ç”µæœºé¢å®šç”µå‹
+#define MOT_RATED_CUR         0x23    //ç”µæœºé¢å®šç”µæµ
+//#define MOT_ENC_LINES         0x24    //ç ç›˜çº¿æ•°
+//#define MOT_HALL_VALUE        0x25    //å½“å‰éœå°”çŠ¶æ€
+#define MOT_ST_DAT            0x26    //ç»å¯¹ç¼–ç å™¨å•åœˆæ•°æ®
+#define MOT_MT_DAT            0x27    //ç»å¯¹ç¼–ç å™¨å¤šåœˆæ•°æ®
+#define MOT_ENC_STA           0x28    //ç»å¯¹ç¼–ç å™¨çŠ¶æ€å¯„å­˜å™¨
+#define BAT_VOLT              0x29    //ç¼–ç å™¨ç”µæ± ç”µå‹ *10mV
+#define ACC_X                 0x2A    //åŠ é€Ÿåº¦è®¡xè½´ *1000mg
+#define ACC_Y                 0x2B    //åŠ é€Ÿåº¦è®¡yè½´ *1000mg
+#define ACC_Z                 0x2C    //åŠ é€Ÿåº¦è®¡zè½´ *1000mg
 
-//¿ØÖÆÄ¿±êÖµ
-#define TAG_WORK_MODE         0x30    //¹¤×÷Ä£Ê½£¬0-¿ª»·£¬1-µçÁ÷Ä£Ê½£¬2-ËÙ¶ÈÄ£Ê½£¬3-Î»ÖÃÄ£Ê½
-#define TAG_OPEN_PWM          0x31    //¿ª»·Ä£Ê½ÏÂÕ¼¿Õ±È£¨0~100£©
-#define TAG_CURRENT_L         0x32    //Ä¿±êµçÁ÷µÍ16Î»£¨mA£©
-#define TAG_CURRENT_H         0x33    //Ä¿±êµçÁ÷¸ß16Î»£¨mA£©
-#define TAG_SPEED_L           0x34    //Ä¿±êËÙ¶ÈµÍ16Î»£¨units/s£©
-#define TAG_SPEED_H           0x35    //Ä¿±êËÙ¶È¸ß16Î»£¨units/s£©
-#define TAG_POSITION_L        0x36    //Ä¿±êÎ»ÖÃµÍ16Î»£¨units£©
-#define TAG_POSITION_H        0x37    //Ä¿±êÎ»ÖÃ¸ß16Î»£¨units£©
+//æ§åˆ¶ç›®æ ‡å€¼
+#define TAG_WORK_MODE         0x30    //å·¥ä½œæ¨¡å¼ï¼Œ0-å¼€ç¯ï¼Œ1-ç”µæµæ¨¡å¼ï¼Œ2-é€Ÿåº¦æ¨¡å¼ï¼Œ3-ä½ç½®æ¨¡å¼
+#define TAG_OPEN_PWM          0x31    //å¼€ç¯æ¨¡å¼ä¸‹å ç©ºæ¯”ï¼ˆ0~100ï¼‰
+#define TAG_CURRENT_L         0x32    //ç›®æ ‡ç”µæµä½16ä½ï¼ˆmAï¼‰
+#define TAG_CURRENT_H         0x33    //ç›®æ ‡ç”µæµé«˜16ä½ï¼ˆmAï¼‰
+#define TAG_SPEED_L           0x34    //ç›®æ ‡é€Ÿåº¦ä½16ä½ï¼ˆunits/sï¼‰
+#define TAG_SPEED_H           0x35    //ç›®æ ‡é€Ÿåº¦é«˜16ä½ï¼ˆunits/sï¼‰
+#define TAG_POSITION_L        0x36    //ç›®æ ‡ä½ç½®ä½16ä½ï¼ˆunitsï¼‰
+#define TAG_POSITION_H        0x37    //ç›®æ ‡ä½ç½®é«˜16ä½ï¼ˆunitsï¼‰
 
-//¿ØÖÆÏŞÖÆÖµ
-#define LIT_MAX_CURRENT       0x40    //×î´óµçÁ÷£¨mA£©
-#define LIT_MAX_SPEED         0x41    //×î´óËÙ¶È£¨rpm£©
-#define LIT_MAX_ACC           0x42    //×î´ó¼ÓËÙ¶È£¨rpm/s£©
-#define LIT_MIN_POSITION_L    0x43    //×îĞ¡Î»ÖÃµÍ16Î»£¨units£©
-#define LIT_MIN_POSITION_H    0x44    //×îĞ¡Î»ÖÃ¸ß16Î»£¨units£©
-#define LIT_MAX_POSITION_L    0x45    //×î´óÎ»ÖÃµÍ16Î»£¨units£©
-#define LIT_MAX_POSITION_H    0x46    //×î´óÎ»ÖÃ¸ß16Î»£¨units£©
+//æ§åˆ¶é™åˆ¶å€¼
+#define LIT_MAX_CURRENT       0x40    //æœ€å¤§ç”µæµï¼ˆmAï¼‰
+#define LIT_MAX_SPEED         0x41    //æœ€å¤§é€Ÿåº¦ï¼ˆrpmï¼‰
+#define LIT_MAX_ACC           0x42    //æœ€å¤§åŠ é€Ÿåº¦ï¼ˆrpm/sï¼‰
+#define LIT_MIN_POSITION_L    0x43    //æœ€å°ä½ç½®ä½16ä½ï¼ˆunitsï¼‰
+#define LIT_MIN_POSITION_H    0x44    //æœ€å°ä½ç½®é«˜16ä½ï¼ˆunitsï¼‰
+#define LIT_MAX_POSITION_L    0x45    //æœ€å¤§ä½ç½®ä½16ä½ï¼ˆunitsï¼‰
+#define LIT_MAX_POSITION_H    0x46    //æœ€å¤§ä½ç½®é«˜16ä½ï¼ˆunitsï¼‰
 
-//Èı±Õ»·»·Ïà¹Ø
-#define SEV_PARAME_LOCKED     0x50    //Èı±Õ»·²ÎÊıËø¶¨±êÖ¾, 0-²»Ëø¶¨(×Ô¶¯ÇĞ»»), 1-µÍËÙ£¨S£©,2-ÖĞËÙ£¨M£©,3-¸ßËÙ£¨L£©
+//ä¸‰é—­ç¯ç¯ç›¸å…³
+#define SEV_PARAME_LOCKED     0x50    //ä¸‰é—­ç¯å‚æ•°é”å®šæ ‡å¿—, 0-ä¸é”å®š(è‡ªåŠ¨åˆ‡æ¢), 1-ä½é€Ÿï¼ˆSï¼‰,2-ä¸­é€Ÿï¼ˆMï¼‰,3-é«˜é€Ÿï¼ˆLï¼‰
 
-#define S_CURRENT_P           0x51    //µçÁ÷»·P²ÎÊı
-#define S_CURRENT_I           0x52    //µçÁ÷»·I²ÎÊı
-#define S_CURRENT_D           0x53    //µçÁ÷»·D²ÎÊı
-#define S_SPEED_P             0x54    //ËÙ¶È»·P²ÎÊı
-#define S_SPEED_I             0x55    //ËÙ¶È»·I²ÎÊı
-#define S_SPEED_D             0x56    //ËÙ¶È»·D²ÎÊı
-#define S_SPEED_DS            0x57    //ËÙ¶ÈPËÀÇø
-#define S_POSITION_P          0x58    //Î»ÖÃ»·P²ÎÊı
-#define S_POSITION_I          0x59    //Î»ÖÃ»·I²ÎÊı
-#define S_POSITION_D          0x5A    //Î»ÖÃ»·D²ÎÊı
-#define S_POSITION_DS         0x5B    //Î»ÖÃPËÀÇø
-#define S_CURRENT_FD          0x5C    //µçÁ÷Ç°À¡
-#define M_CURRENT_FD          0x5D    //µçÁ÷Ç°À¡
-#define L_CURRENT_FD          0x5E    //µçÁ÷Ç°À¡
+#define S_CURRENT_P           0x51    //ç”µæµç¯På‚æ•°
+#define S_CURRENT_I           0x52    //ç”µæµç¯Iå‚æ•°
+#define S_CURRENT_D           0x53    //ç”µæµç¯Då‚æ•°
+#define S_SPEED_P             0x54    //é€Ÿåº¦ç¯På‚æ•°
+#define S_SPEED_I             0x55    //é€Ÿåº¦ç¯Iå‚æ•°
+#define S_SPEED_D             0x56    //é€Ÿåº¦ç¯Då‚æ•°
+#define S_SPEED_DS            0x57    //é€Ÿåº¦Pæ­»åŒº
+#define S_POSITION_P          0x58    //ä½ç½®ç¯På‚æ•°
+#define S_POSITION_I          0x59    //ä½ç½®ç¯Iå‚æ•°
+#define S_POSITION_D          0x5A    //ä½ç½®ç¯Då‚æ•°
+#define S_POSITION_DS         0x5B    //ä½ç½®Pæ­»åŒº
+#define S_CURRENT_FD          0x5C    //ç”µæµå‰é¦ˆ
+#define M_CURRENT_FD          0x5D    //ç”µæµå‰é¦ˆ
+#define L_CURRENT_FD          0x5E    //ç”µæµå‰é¦ˆ
 
-#define M_CURRENT_P           0x61    //µçÁ÷»·P²ÎÊı
-#define M_CURRENT_I           0x62    //µçÁ÷»·I²ÎÊı
-#define M_CURRENT_D           0x63    //µçÁ÷»·D²ÎÊı
-#define M_SPEED_P             0x64    //ËÙ¶È»·P²ÎÊı
-#define M_SPEED_I             0x65    //ËÙ¶È»·I²ÎÊı
-#define M_SPEED_D             0x66    //ËÙ¶È»·D²ÎÊı
-#define M_SPEED_DS            0x67    //ËÙ¶ÈPËÀÇø
-#define M_POSITION_P          0x68    //Î»ÖÃ»·P²ÎÊı
-#define M_POSITION_I          0x69    //Î»ÖÃ»·I²ÎÊı
-#define M_POSITION_D          0x6A    //Î»ÖÃ»·D²ÎÊı
-#define M_POSITION_DS         0x6B    //Î»ÖÃPËÀÇø
+#define M_CURRENT_P           0x61    //ç”µæµç¯På‚æ•°
+#define M_CURRENT_I           0x62    //ç”µæµç¯Iå‚æ•°
+#define M_CURRENT_D           0x63    //ç”µæµç¯Då‚æ•°
+#define M_SPEED_P             0x64    //é€Ÿåº¦ç¯På‚æ•°
+#define M_SPEED_I             0x65    //é€Ÿåº¦ç¯Iå‚æ•°
+#define M_SPEED_D             0x66    //é€Ÿåº¦ç¯Då‚æ•°
+#define M_SPEED_DS            0x67    //é€Ÿåº¦Pæ­»åŒº
+#define M_POSITION_P          0x68    //ä½ç½®ç¯På‚æ•°
+#define M_POSITION_I          0x69    //ä½ç½®ç¯Iå‚æ•°
+#define M_POSITION_D          0x6A    //ä½ç½®ç¯Då‚æ•°
+#define M_POSITION_DS         0x6B    //ä½ç½®Pæ­»åŒº
 
-#define L_CURRENT_P           0x71    //µçÁ÷»·P²ÎÊı
-#define L_CURRENT_I           0x72    //µçÁ÷»·I²ÎÊı
-#define L_CURRENT_D           0x73    //µçÁ÷»·D²ÎÊı
-#define L_SPEED_P             0x74    //ËÙ¶È»·P²ÎÊı
-#define L_SPEED_I             0x75    //ËÙ¶È»·I²ÎÊı
-#define L_SPEED_D             0x76    //ËÙ¶È»·D²ÎÊı
-#define L_SPEED_DS            0x77    //ËÙ¶ÈPËÀÇø
-#define L_POSITION_P          0x78    //Î»ÖÃ»·P²ÎÊı
-#define L_POSITION_I          0x79    //Î»ÖÃ»·I²ÎÊı
-#define L_POSITION_D          0x7A    //Î»ÖÃ»·D²ÎÊı
-#define L_POSITION_DS         0x7B    //Î»ÖÃPËÀÇø
+#define L_CURRENT_P           0x71    //ç”µæµç¯På‚æ•°
+#define L_CURRENT_I           0x72    //ç”µæµç¯Iå‚æ•°
+#define L_CURRENT_D           0x73    //ç”µæµç¯Då‚æ•°
+#define L_SPEED_P             0x74    //é€Ÿåº¦ç¯På‚æ•°
+#define L_SPEED_I             0x75    //é€Ÿåº¦ç¯Iå‚æ•°
+#define L_SPEED_D             0x76    //é€Ÿåº¦ç¯Då‚æ•°
+#define L_SPEED_DS            0x77    //é€Ÿåº¦Pæ­»åŒº
+#define L_POSITION_P          0x78    //ä½ç½®ç¯På‚æ•°
+#define L_POSITION_I          0x79    //ä½ç½®ç¯Iå‚æ•°
+#define L_POSITION_D          0x7A    //ä½ç½®ç¯Då‚æ•°
+#define L_POSITION_DS         0x7B    //ä½ç½®Pæ­»åŒº
 
-//É²³µ¿ØÖÆÃüÁî
-#define BRAKE_RELEASE_CMD     0x80    //É²³µÊÍ·ÅÃüÁî£¬0-±£³ÖÖÆ¶¯£¬1-ÊÍ·ÅÉ²³µ
-#define BRAKE_STATE           0x81    //É²³µ×´Ì¬£¬0-±£³ÖÖÆ¶¯£¬1-ÊÍ·ÅÉ²³µ
+//åˆ¹è½¦æ§åˆ¶å‘½ä»¤
+#define BRAKE_RELEASE_CMD     0x80    //åˆ¹è½¦é‡Šæ”¾å‘½ä»¤ï¼Œ0-ä¿æŒåˆ¶åŠ¨ï¼Œ1-é‡Šæ”¾åˆ¹è½¦
+#define BRAKE_STATE           0x81    //åˆ¹è½¦çŠ¶æ€ï¼Œ0-ä¿æŒåˆ¶åŠ¨ï¼Œ1-é‡Šæ”¾åˆ¹è½¦
 
-//Ê¾²¨Æ÷Ä£¿é×ÓË÷ÒıµØÖ·¶¨Òå
-#define SCP_MASK              0x90    //¼ÇÂ¼¶ÔÏó±êÖ¾MASK
-#define SCP_REC_TIM           0x91    //¼ÇÂ¼Ê±¼ä¼ä¸ô£¨¶Ô10kHZµÄ·ÖÆµÖµ£©
+//ç¤ºæ³¢å™¨æ¨¡å—å­ç´¢å¼•åœ°å€å®šä¹‰
+#define SCP_MASK              0x90    //è®°å½•å¯¹è±¡æ ‡å¿—MASK
+#define SCP_REC_TIM           0x91    //è®°å½•æ—¶é—´é—´éš”ï¼ˆå¯¹10kHZçš„åˆ†é¢‘å€¼ï¼‰
 
-#define SCP_TAGCUR_L          0x92    //Ä¿±êµçÁ÷Êı¾İ¼¯
-#define SCP_TAGCUR_H          0x93    //Ä¿±êµçÁ÷Êı¾İ¼¯
-#define SCP_MEACUR_L          0x94    //Êµ¼ÊµçÁ÷Êı¾İ¼¯
-#define SCP_MEACUR_H          0x95    //Êµ¼ÊµçÁ÷Êı¾İ¼¯
-#define SCP_TAGSPD_L          0x96    //Ä¿±êËÙ¶ÈÊı¾İ¼¯
-#define SCP_TAGSPD_H          0x97    //Ä¿±êËÙ¶ÈÊı¾İ¼¯
-#define SCP_MEASPD_L          0x98    //Êµ¼ÊËÙ¶ÈÊı¾İ¼¯
-#define SCP_MEASPD_H          0x99    //Êµ¼ÊËÙ¶ÈÊı¾İ¼¯
-#define SCP_TAGPOS_L          0x9A    //Ä¿±êÎ»ÖÃÊı¾İ¼¯
-#define SCP_TAGPOS_H          0x9B    //Ä¿±êÎ»ÖÃÊı¾İ¼¯
-#define SCP_MEAPOS_L          0x9C    //Êµ¼ÊÎ»ÖÃÊı¾İ¼¯
-#define SCP_MEAPOS_H          0x9D    //Êµ¼ÊÎ»ÖÃÊı¾İ¼¯
+#define SCP_TAGCUR_L          0x92    //ç›®æ ‡ç”µæµæ•°æ®é›†
+#define SCP_TAGCUR_H          0x93    //ç›®æ ‡ç”µæµæ•°æ®é›†
+#define SCP_MEACUR_L          0x94    //å®é™…ç”µæµæ•°æ®é›†
+#define SCP_MEACUR_H          0x95    //å®é™…ç”µæµæ•°æ®é›†
+#define SCP_TAGSPD_L          0x96    //ç›®æ ‡é€Ÿåº¦æ•°æ®é›†
+#define SCP_TAGSPD_H          0x97    //ç›®æ ‡é€Ÿåº¦æ•°æ®é›†
+#define SCP_MEASPD_L          0x98    //å®é™…é€Ÿåº¦æ•°æ®é›†
+#define SCP_MEASPD_H          0x99    //å®é™…é€Ÿåº¦æ•°æ®é›†
+#define SCP_TAGPOS_L          0x9A    //ç›®æ ‡ä½ç½®æ•°æ®é›†
+#define SCP_TAGPOS_H          0x9B    //ç›®æ ‡ä½ç½®æ•°æ®é›†
+#define SCP_MEAPOS_L          0x9C    //å®é™…ä½ç½®æ•°æ®é›†
+#define SCP_MEAPOS_H          0x9D    //å®é™…ä½ç½®æ•°æ®é›†
 
-typedef uint8_t rec_t[8];
+typedef uint8_t rec_t[12];
 
 typedef struct td_joint
 {

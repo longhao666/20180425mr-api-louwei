@@ -113,7 +113,7 @@ extern "C" {
 /// <param name="masterId">	Identifier for the master. </param>
 /// <returns>	A MRAPI error code. </returns>
 int32_t __stdcall startMaster(
-	char* busname,
+	const char* busname,
 	uint8_t masterId);
 
 /// <summary>	Stops a master. </summary>
@@ -191,7 +191,7 @@ int32_t __stdcall jointPush(
 	JOINT_HANDLE h, 
 	int32_t* pos, 
 	int32_t* speed, 
-	int32_t* current);
+	int32_t* current _DEF_ARG);
 
 
 /// <summary>	Joint poll. </summary>

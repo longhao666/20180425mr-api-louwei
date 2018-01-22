@@ -30,7 +30,7 @@ void _canReadISR(Message* msg) {
       canDispatch(pJoint->basicModule, msg);
 }
 
-int32_t __stdcall startMaster(char* busname, uint8_t masterId) {
+int32_t __stdcall startMaster(const char* busname, uint8_t masterId) {
   // Open and Initiallize CAN Port
   if (hCan[masterId] != 0) {
 	  ELOG("masterId %d has been combined to CAN device HANDLE 0x%X", masterId, hCan[masterId]);

@@ -18,6 +18,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\examples\test1\test1.c" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DA2166B7-27F5-4182-8C66-02C8B1D1DEB1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -157,9 +160,6 @@
       <OutputFile>$(OutDir)\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\examples\test1 - win\test1.c" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
