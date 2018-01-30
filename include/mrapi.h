@@ -724,6 +724,19 @@ int32_t __stdcall jointSetScpMask(
 	int32_t timeout, 
 	jCallback_t callBack);
 
+/// <summary>Joint set scp interval.</summary>
+/// <remarks>Louwei, 2018/1/30.</remarks>
+/// <param name="pJoint">  	The joint. </param>
+/// <param name="interval">	The interval. </param>
+/// <param name="timeout"> 	The timeout. </param>
+/// <param name="callBack">	The call back. </param>
+/// <returns>An int32_t.</returns>
+int32_t __stdcall jointSetScpInterval(
+	JOINT_HANDLE pJoint, 
+	uint16_t interval, 
+	int32_t timeout, 
+	jCallback_t callBack);
+
 /// <summary>Joint set bootloader.</summary>
 /// <remarks>Louwei, 2018/1/30.</remarks>
 /// <param name="pJoint">  	The joint. </param>

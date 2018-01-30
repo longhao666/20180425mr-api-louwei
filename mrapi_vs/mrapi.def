@@ -54,5 +54,6 @@ EXPORTS
 	jointGet @51
 	jointSet @52
 	jointSetBootloader @53
+	jointSetScpInterval @54
 
 

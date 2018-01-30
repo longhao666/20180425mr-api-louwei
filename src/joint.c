@@ -590,6 +590,10 @@ int32_t __stdcall jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t ti
 	return jointSet(SCP_MASK, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 
+int32_t __stdcall jointSetScpInterval(JOINT_HANDLE pJoint, uint16_t interval, int32_t timeout, jCallback_t callBack) {
+	return jointSet(SCP_REC_TIM, 2, (Joint*)pJoint, (void*)&interval, timeout, callBack);
+}
+
 int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint,  int32_t timeout, jCallback_t callBack) {
 	uint16_t mask = 1;
 	return jointSet(SYS_IAP, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
