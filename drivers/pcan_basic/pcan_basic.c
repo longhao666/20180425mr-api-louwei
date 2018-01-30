@@ -83,7 +83,7 @@ uint8_t canChangeBaudRate_driver(CAN_HANDLE fd, char* baud)
 }
 
 /***************************************************************************/
-CAN_HANDLE canOpen_driver(char* busname, char* baud)
+CAN_HANDLE canOpen_driver(const char* busname, const char* baud)
 {
 	CAN_HANDLE handle = 0;
 	int baudrate;

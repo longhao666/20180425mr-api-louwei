@@ -25,7 +25,7 @@
 #define SYS_ENABLE_DRIVER     0x0a    //驱动器使能标志
 #define SYS_ENABLE_ON_POWER   0x0b    //上电使能驱动器标志
 #define SYS_SAVE_TO_FLASH     0x0c    //保存数据到Flash标志
-//#define SYS_DEMA_ABSPOS       0x0d    //自动标定绝对位置标志
+#define SYS_IAP               0x0d    //下次上电进入bootloader
 #define SYS_SET_ZERO_POS      0x0e    //将当前位置设置为零点标志
 #define SYS_CLEAR_ERROR       0x0f    //清除错误标志
 

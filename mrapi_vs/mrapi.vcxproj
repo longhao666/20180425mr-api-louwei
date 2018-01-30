@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="..\drivers\pcan_basic\pcan_basic.c" />
     <ClCompile Include="..\drivers\pcan_basic\thread_win.c" />
+    <ClCompile Include="..\src\gripper.c" />
     <ClCompile Include="..\src\joint.c" />
     <ClCompile Include="..\src\logger.c" />
     <ClCompile Include="..\src\master.c" />

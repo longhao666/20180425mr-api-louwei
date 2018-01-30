@@ -724,8 +724,20 @@ int32_t __stdcall jointSetScpMask(
 	int32_t timeout, 
 	jCallback_t callBack);
 
+/// <summary>Joint set bootloader.</summary>
+/// <remarks>Louwei, 2018/1/30.</remarks>
+/// <param name="pJoint">  	The joint. </param>
+/// <param name="timeout"> 	The timeout. </param>
+/// <param name="callBack">	The call back. </param>
+/// <returns>An int32_t.</returns>
+int32_t __stdcall jointSetBootloader(
+	JOINT_HANDLE pJoint, 
+	int32_t timeout, 
+	jCallback_t callBack);
+
 #ifdef __cplusplus
 }
+
 #endif
 #endif
 

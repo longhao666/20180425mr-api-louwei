@@ -76,7 +76,13 @@
 extern FILE *logp;
 extern char sstime[256];
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 void loggerInit(FILE **fp);
 void loggerTime(char*);
-
+#ifdef __cplusplus
+}
+#endif
 #endif /*_LOGGER_H*/

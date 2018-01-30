@@ -12,6 +12,7 @@
 #include <Windows.h>
 #define TASK_HANDLE HANDLE
 #endif
+
 #include "mrapi.h"  //should before logger.h
 #include "logger.h"
 

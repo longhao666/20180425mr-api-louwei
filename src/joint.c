@@ -22,7 +22,7 @@ const uint8_t joint_accessType[10][16] =
         RW,			//使能驱动器标志
         RW,			//上电使能驱动器标志
         RW,			//保存数据到Flash标志
-        RW,			//自动标定绝对位置标志（本版本已移除）
+        RW,			//下次上电进入bootloader
         RW,			//将当前位置设置为零点标志
         RW,			//清除错误标志
     },
@@ -178,7 +178,7 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
   return MR_ERROR_OK;
 }
 
-int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
+int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current _DEF_ARG) {
 	Joint* pJoint = (Joint*)h;
 	int32_t buf[3] = {0};
     if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
@@ -352,7 +352,7 @@ int32_t __stdcall jointDown(JOINT_HANDLE h) {
   for (; i < jointNbr - 1; i++) {
     jointStack[i] = jointStack[i+1];
   }
-  jointStack[jointNbr--] = NULL;
+  jointStack[--jointNbr] = NULL;
   jointDestruct(pJoint);
   return MR_ERROR_OK;
 }
@@ -588,6 +588,11 @@ int32_t __stdcall jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int3
 
 int32_t __stdcall jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, jCallback_t callBack) {
 	return jointSet(SCP_MASK, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
+}
+
+int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint,  int32_t timeout, jCallback_t callBack) {
+	uint16_t mask = 1;
+	return jointSet(SYS_IAP, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 
 

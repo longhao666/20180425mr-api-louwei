@@ -53,5 +53,6 @@ EXPORTS
 	jointSetScpMask @50
 	jointGet @51
 	jointSet @52
+	jointSetBootloader @53
 
 
