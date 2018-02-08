@@ -10,6 +10,9 @@
 #define MAX_SERVO_BUFS 128
 #define WARNING_SERVO_BUFS 20
 
+#define BAUD_CAN_250K			0x0000		//250K
+#define BAUD_CAN_500K			0x0001		//500K
+#define BAUD_CAN_1M				0x0002		//1M
 
 /// proctocol definition
 //系统状态相关
@@ -143,6 +146,7 @@ typedef struct td_joint
 	Module* basicModule;
 	uint16_t* jointId;
 	uint16_t* jointType;
+	uint16_t* jointRatio;
 	uint8_t isOnline;
 
 	rec_t txQue[MAX_SERVO_BUFS];

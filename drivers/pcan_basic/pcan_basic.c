@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define CAN_INIT_TYPE_ST_RTR PCAN_MESSAGE_STANDARD | PCAN_MESSAGE_RTR 
 
 /***************************************************************************/
-int TranslateBaudeRate(char* optarg) {
+int TranslateBaudeRate(const char* optarg) {
 	if (!strcmp(optarg, "1M")) return PCAN_BAUD_1M;
 	if (!strcmp(optarg, "800K")) return PCAN_BAUD_800K;
 	if (!strcmp(optarg, "500K")) return PCAN_BAUD_500K;
@@ -50,7 +50,7 @@ int TranslateBaudeRate(char* optarg) {
 	return 0x0000;
 }
 
-CAN_HANDLE TranslateCANHandle(char* optarg) {
+CAN_HANDLE TranslateCANHandle(const char* optarg) {
 	if (!strcmp(optarg, "pcanusb1")) return PCAN_USBBUS1;
 	if (!strcmp(optarg, "pcanusb2")) return PCAN_USBBUS2;
 	if (!strcmp(optarg, "pcanusb3")) return PCAN_USBBUS3;

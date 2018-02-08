@@ -46,7 +46,7 @@
 #define MODE_CURRENT          1       // Current/Torque servo mode
 #define MODE_SPEED            2       // Speed servo mode
 #define MODE_POSITION         3       // Position servo mode
-#define MODE_CYCLESYNC        4       //
+#define MODE_CYCLESYNC        4       // 
 
 // Represent the MRAPI error and status codes
 //
@@ -135,8 +135,8 @@ int32_t __stdcall joinMaster(
 /// <remarks>	Louwei, 2018/1/19. </remarks>
 /// <param name="hz">	The Hz. </param>
 /// <returns>	A MRAPI error code. </returns>
-int32_t __stdcall setControlLoopFreq(
-	int32_t hz);
+//int32_t __stdcall setControlLoopFreq(
+//	int32_t hz);
 
 /// <summary>	Joint up. </summary>
 /// <remarks>	Louwei, 2018/1/19. </remarks>
@@ -164,20 +164,12 @@ JOINT_HANDLE __stdcall jointSelect(
 	uint16_t id);  //find joint by it's ID
 
 
-/// <summary>	Joint start servo. </summary>
-/// <remarks>	Louwei, 2018/1/19. </remarks>
-/// <param name="pJoint"> 	The joint. </param>
-/// <param name="handler">	The handler. </param>
-void __stdcall jointStartServo(
-	JOINT_HANDLE pJoint, 
-	jQueShortHandler_t handler);
+//void __stdcall jointStartServo(
+//	JOINT_HANDLE pJoint, 
+//	jQueShortHandler_t handler);
 
-
-/// <summary>	Joint stop servo. </summary>
-/// <remarks>	Louwei, 2018/1/19. </remarks>
-/// <param name="pJoint">	The joint. </param>
-void __stdcall jointStopServo(
-	JOINT_HANDLE pJoint);
+//void __stdcall jointStopServo(
+//	JOINT_HANDLE pJoint);
 
 
 /// <summary>	Joint push. </summary>
@@ -189,9 +181,9 @@ void __stdcall jointStopServo(
 /// <returns>	A MRAPI error code. </returns>
 int32_t __stdcall jointPush(
 	JOINT_HANDLE h, 
-	int32_t* pos, 
-	int32_t* speed, 
-	int32_t* current _DEF_ARG);
+	float pos,
+	float speed,
+	float current _DEF_ARG);
 
 
 /// <summary>	Joint poll. </summary>
@@ -203,9 +195,9 @@ int32_t __stdcall jointPush(
 /// <returns>	A MRAPI error code. </returns>
 int32_t __stdcall jointPoll(
 	JOINT_HANDLE h, 
-	int32_t* pos, 
-	int32_t* speed, 
-	int32_t* current);
+	float* pos, 
+	float* speed,
+	float* current);
 
 
 /// <summary>	Joint poll scope. </summary>
@@ -217,9 +209,9 @@ int32_t __stdcall jointPoll(
 /// <returns>	A MRAPI error code. </returns>
 int32_t __stdcall jointPollScope(
 	JOINT_HANDLE h, 
-	int32_t* pos, 
-	int32_t* speed, 
-	int32_t* current);
+	float* pos,
+	float* speed,
+	float* current);
 
 
 /// <summary>	Joint get identifier. </summary>
@@ -260,6 +252,8 @@ int32_t __stdcall jointGetError(
 	uint16_t* data, 
 	int32_t timeout, 
 	jCallback_t callBack);
+
+int32_t __stdcall jointGetRatio(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack);
 
 /// <summary>	Joint get voltage. </summary>
 /// <remarks>	Louwei, 2018/1/19. </remarks>
@@ -745,6 +739,7 @@ int32_t __stdcall jointSetScpInterval(
 /// <returns>An int32_t.</returns>
 int32_t __stdcall jointSetBootloader(
 	JOINT_HANDLE pJoint, 
+	uint16_t mask,
 	int32_t timeout, 
 	jCallback_t callBack);
 

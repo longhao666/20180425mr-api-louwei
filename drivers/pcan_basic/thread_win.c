@@ -43,6 +43,12 @@ static void (*canTxPeriodic)(DWORD* tv) = NULL;
 /// It's a cycle timer
 int TimerThreadLoop(LPVOID arg)
 {
+	timer = CreateWaitableTimer(NULL, FALSE, NULL);
+	if (NULL == timer)
+	{
+		ILOG("CreateWaitableTimer failed (%d)", GetLastError());
+	}
+
 	ILOG("Go into TimerThreadLoop");
     while(!stop_timer)
     {
@@ -62,32 +68,21 @@ int TimerThreadLoop(LPVOID arg)
 void StartTimerLoop(int32_t hz, void* periodCall)
 {
 	unsigned long timer_thread_id;
-	LARGE_INTEGER liDueTime;
 	float val = 0;
 
 	if (stop_timer == 0) {
 		ILOG("Timer has already been started");
 		return;
 	}
-	
-	liDueTime.QuadPart = 0;
 
 	stop_timer = 0;
 	canTxPeriodic = periodCall;
-    timer = CreateWaitableTimer(NULL, FALSE, NULL);
-    if(NULL == timer)
-    {
-        ILOG("CreateWaitableTimer failed (%d)", GetLastError());
-    }
-
-    // Take first absolute time ref in milliseconds.
-    timebuffer = GetTickCount();
 
     timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, NULL, 0, &timer_thread_id);
 	if (hz != -1) {
 		val = 1000000.0f / (float)hz;
 	}
-	//setTimerInterval(round(val));
+	setTimerInterval(round(val));
 }
 
 void StopTimerLoop(void)//TimerCallback_t exitfunction)
@@ -113,7 +108,6 @@ void setTimer(TIMEVAL value) //us
 
         /* arg 2 of SetWaitableTimer take 100 ns interval */
         liDueTime.QuadPart = ((long long) (-1) * value * 10);
-        //MSG("SetTimer(%llu)\n", value);
 
         if (!SetWaitableTimer(timer, &liDueTime, 0, NULL, NULL, FALSE))
         {

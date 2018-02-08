@@ -3,12 +3,9 @@ EXPORTS
 	startMaster @1
 	stopMaster @2
 	joinMaster @3
-	setControlLoopFreq @4
 	jointUp @6
 	jointDown @7
 	jointSelect @8
-	jointStartServo @9
-	jointStopServo @10
 	jointPush @11
 	jointPoll @12
 	jointPollScope @121
@@ -55,5 +52,6 @@ EXPORTS
 	jointSet @52
 	jointSetBootloader @53
 	jointSetScpInterval @54
+	jointGetRatio @55
 
 

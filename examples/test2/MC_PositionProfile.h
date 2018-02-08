@@ -71,7 +71,7 @@ typedef struct _position_profile_t
  *
  * @return no. of steps for position profile : range [1 - steps]
  */
-int32_t position_profile_init(position_profile_t *position_profile, int32_t target_position, int32_t actual_position, int32_t velocity, int32_t acceleration); 
+int32_t position_profile_init(position_profile_t *position_profile, float target_position, float actual_position, float velocity, float acceleration);
 
 /**
  * @brief Generate Position Profile
@@ -81,7 +81,7 @@ int32_t position_profile_init(position_profile_t *position_profile, int32_t targ
  *
  * @return corresponding target position at the step input
  */
-int32_t position_profile_caculate(position_profile_t *position_profile, int32_t step);
+float position_profile_caculate(position_profile_t *position_profile, int32_t step);
 
 
 #ifdef __cplusplus

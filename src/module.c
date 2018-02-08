@@ -13,8 +13,7 @@ int32_t writeSyncMsg(Module* d, uint16_t prefix, void* pSourceData) {
 	  txMsg.cob_id = *(d->moduleId) + prefix;
 	  txMsg.rtr = 0;
 	  txMsg.len = 0;
-  }
-  else {
+  } else {
 	  txMsg.cob_id = *(d->moduleId) + prefix;
 	  txMsg.rtr = 0;
 	  txMsg.len = 8;

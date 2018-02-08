@@ -178,40 +178,74 @@ int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
   return MR_ERROR_OK;
 }
 
-int32_t __stdcall jointPush(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current _DEF_ARG) {
+
+float __stdcall pulse2degree(int32_t pos_q31) {
+	return (float)pos_q31 / 65536.0f * 360.0f;  // degree
+}
+
+int32_t __stdcall degree2pulse(float pos_f) {
+	return (int32_t)(pos_f / 360.0f * 65536.0f);
+}
+
+int32_t __stdcall jointPush(JOINT_HANDLE h, float pos, float speed, float current _DEF_ARG) {
 	Joint* pJoint = (Joint*)h;
 	int32_t buf[3] = {0};
-    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
-        return MR_ERROR_QXMTFULL;
-    }
-	if (pos) buf[0] = *pos;
-	if (speed) buf[1] = *speed;
-	if (current) buf[2] = *current;
-	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 12);
-    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_SERVO_BUFS;
+//    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
+//        return MR_ERROR_QXMTFULL;
+//    }
+	buf[0] = (int32_t)(pos / 360.0f*65536.0f);
+	buf[1] = (int32_t)(speed / 360.0f*65536.0f*(float)(*pJoint->jointRatio));
+	buf[2] = (int32_t)(current *1000.0f);
+
+//	writeEntryNR(pJoint->basicModule, SYS_POSITION_L, &buf[0], 4);
+	// only first 8 bytes will be send to joint
+	writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+
+//	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 12);
+//    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_SERVO_BUFS;
     return MR_ERROR_OK;
 }
 
 /// 从内存表获取实际位置和实际电流
-int32_t __stdcall jointPoll(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
+int32_t __stdcall jointPoll(JOINT_HANDLE h, float* pos, float* speed, float* current) {
 	Joint* pJoint = (Joint*)h;
+	int32_t temp;
 	if (!pJoint)
 		return MR_ERROR_ILLDATA;
-	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
-	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
-	if (current) memcpy(current, &(pJoint->basicModule->memoryTable[SYS_CURRENT_L]), 4);
+	if (pos) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
+		*pos = (float)temp / 65536.0f * 360.0f; // degree
+	}
+	if (speed) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
+		*speed = (float)temp / 65536.0f * 360.0f; // degree/s
+	}
+	if (current) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_CURRENT_L]), 4);
+		*current = (float)temp / 1000.0f;  // A
+	}
 
 	return MR_ERROR_OK;
 }
 
-/// 从内存表获取实际位置和实际电流
-int32_t __stdcall jointPollScope(JOINT_HANDLE h, int32_t* pos, int32_t* speed, int32_t* current) {
+/// 从内存表获取实际位置和实际电流 (通过scope)
+int32_t __stdcall jointPollScope(JOINT_HANDLE h, float* pos, float* speed, float* current) {
 	Joint* pJoint = (Joint*)h;
+	int32_t temp;
 	if (!pJoint)
 		return MR_ERROR_ILLDATA;
-	if (pos) memcpy(pos, &(pJoint->basicModule->memoryTable[SCP_TAGPOS_L]), 8);
-	if (speed) memcpy(speed, &(pJoint->basicModule->memoryTable[SCP_TAGSPD_L]), 8);
-	if (current) memcpy(current, &(pJoint->basicModule->memoryTable[SCP_TAGCUR_L]), 8);
+	if (pos) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEAPOS_L]), 4);
+		*pos = (float)temp / 65536.0f * 360.0f; // degree
+	}
+	if (speed) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEASPD_L]), 4);
+		*speed = (float)temp / 65536.0f * 360.0f; // degree/s
+	}
+	if (current) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEACUR_L]), 4);
+		*current = (float)temp / 1000.0f;  // A
+	}
 
 	return MR_ERROR_OK;
 }
@@ -236,6 +270,7 @@ int32_t _jointSendPVTSeq(Joint* h) {
   return MR_ERROR_OK;
 }
 
+// called by master in timerThread
 int32_t jointPeriodSend(void* tv) {
   for (int16_t i = 0; i < jointNbr; i++) {
     _jointSendPVTSeq(jointStack[i]);
@@ -251,12 +286,14 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   pModule = pJoint->basicModule;
   pModule->memoryLen = CMDMAP_LEN;
   pModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  memset(pModule->memoryTable, 0, CMDMAP_LEN* sizeof(uint16_t));
   pModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
   pModule->writeDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
   pModule->accessType = (uint8_t*)joint_accessType;
 
   pModule->memoryTable[SYS_ID] = id;
   pJoint->jointId = (uint16_t*)&(pModule->memoryTable[SYS_ID]);
+  pJoint->jointRatio = (uint16_t*)&(pModule->memoryTable[SYS_REDU_RATIO]);
   pModule->moduleId = pJoint->jointId;
   pModule->canSend = canSend;
 
@@ -293,7 +330,6 @@ void __stdcall jointStartServo(JOINT_HANDLE h, jQueShortHandler_t handler) {
 	Joint* pJoint = (Joint*)h;
     if (pJoint)
         pJoint->jointBufUnderflowHandler = handler;
-
 }
 
 void __stdcall jointStopServo(JOINT_HANDLE h) {
@@ -312,21 +348,25 @@ JOINT_HANDLE __stdcall jointSelect(uint16_t id) {
 }
 
 JOINT_HANDLE __stdcall jointUp(uint16_t joindId, uint8_t masterId) {
-	int32_t res;
+	int32_t res, i = 0;
 	Joint* pJoint = jointConstruct(joindId, (canSend_t)hCansendHandler[masterId]);
 
 	if (jointNbr >= MAX_JOINTS) {
 		ELOG("Joint Stack Overflow");
 		return NULL;
-	}
-	else {
+	} else {
 		if (pJoint != jointSelect(*(pJoint->jointId)))
 			jointStack[jointNbr++] = pJoint; // push into stack
 		else return (JOINT_HANDLE)pJoint; // already in the stack
 	}
 	res = jointGetType(pJoint, NULL, 5000, NULL);
 	if ((res == 0) && isJointType(*(pJoint->jointType))) {
-		return (JOINT_HANDLE)pJoint;
+		while ((*(pJoint->jointRatio) == 0) && i < 10) {
+			i++;
+			res = jointGetRatio(pJoint, NULL, 1000, NULL);
+		}
+		if (i < 10)
+			return (JOINT_HANDLE)pJoint;
 	}
 	jointStack[--jointNbr] = NULL; // delete from stack
 	jointDestruct(pJoint);
@@ -442,6 +482,10 @@ int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t t
 
 int32_t __stdcall jointGetTemp(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
 	return jointGet(SYS_TEMP, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetRatio(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+	return jointGet(SYS_REDU_RATIO, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
 int32_t __stdcall jointGetBaudrate(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
@@ -582,6 +626,10 @@ int32_t __stdcall jointSetPositionP(JOINT_HANDLE pJoint, uint16_t pValue, int32_
 	return jointSet(S_POSITION_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
 }
 
+int32_t __stdcall jointSetPositionD(JOINT_HANDLE pJoint, uint16_t dValue, int32_t timeout, jCallback_t callBack) {
+	return jointSet(S_POSITION_D, 2, (Joint*)pJoint, (void*)&dValue, timeout, callBack);
+}
+
 int32_t __stdcall jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int32_t timeout, jCallback_t callBack) {
 	return jointSet(S_POSITION_DS, 2, (Joint*)pJoint, (void*)&dsValue, timeout, callBack);
 }
@@ -594,8 +642,7 @@ int32_t __stdcall jointSetScpInterval(JOINT_HANDLE pJoint, uint16_t interval, in
 	return jointSet(SCP_REC_TIM, 2, (Joint*)pJoint, (void*)&interval, timeout, callBack);
 }
 
-int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint,  int32_t timeout, jCallback_t callBack) {
-	uint16_t mask = 1;
+int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, jCallback_t callBack) {
 	return jointSet(SYS_IAP, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 

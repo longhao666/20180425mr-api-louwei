@@ -11,6 +11,7 @@
 #elif defined _WINDOWS
 #include <Windows.h>
 #define TASK_HANDLE HANDLE
+void usleep(__int64 usec);
 #endif
 
 #include "mrapi.h"  //should before logger.h

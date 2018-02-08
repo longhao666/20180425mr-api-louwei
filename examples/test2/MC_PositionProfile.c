@@ -12,7 +12,7 @@ float position_profile_q(position_profile_t pp, float t);
 float position_profile_v(position_profile_t pp, float t);
 float position_profile_a(position_profile_t pp, float t);
 
-int32_t position_profile_init(position_profile_t *position_profile, int32_t target_position, int32_t actual_position, int32_t velocity, int32_t acceleration) 
+int32_t position_profile_init(position_profile_t *position_profile, float target_position, float actual_position, float velocity, float acceleration)
 {
   float Throw, Yaux;
 
@@ -84,7 +84,7 @@ int32_t position_profile_init(position_profile_t *position_profile, int32_t targ
   return position_profile->steps;
 }
 
-int32_t position_profile_caculate(position_profile_t *position_profile, int32_t step)
+float position_profile_caculate(position_profile_t *position_profile, int32_t step)
 {
   float t = position_profile->s_time * step;
 
@@ -96,7 +96,7 @@ int32_t position_profile_caculate(position_profile_t *position_profile, int32_t 
     position_profile->v = 0;
     position_profile->a = 0;
     
-    return (int32_t) round(position_profile->qf);
+    return position_profile->qf;
   }
 
   position_profile->q = position_profile->qi + (float)position_profile->sgn * position_profile_q(*position_profile, t);
@@ -105,7 +105,7 @@ int32_t position_profile_caculate(position_profile_t *position_profile, int32_t 
   
   position_profile->a = (float)position_profile->sgn * position_profile_a(*position_profile, t);
 
-  return (int32_t) round(position_profile->q);
+  return position_profile->q;
 }
 
 float position_profile_q(position_profile_t pp, float t)
