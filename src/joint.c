@@ -402,7 +402,11 @@ int32_t __stdcall jointDown(JOINT_HANDLE h) {
 /// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
 int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
-	Module* pModule = pJoint->basicModule;
+	Module* pModule;
+	if (pJoint == NULL) {
+		return MR_ERROR_ILLDATA;
+	}
+	pModule = pJoint->basicModule;
     if (timeout == -1) {
 		jointRxCb[index] = callBack;
 		readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
@@ -432,8 +436,12 @@ int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* d
 int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
 	int16_t i;
 	int32_t ret;
-	Module* pModule = pJoint->basicModule;
-    if (timeout == -1) { //INFINITE
+	Module* pModule;
+	if (pJoint == NULL) {
+		return MR_ERROR_ILLDATA;
+	}
+	pModule = pJoint->basicModule;
+	if (timeout == -1) { //INFINITE
 		if (callBack == NULL) {
 			writeEntryNR(pModule, index, data, datLen);
 		} else {

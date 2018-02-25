@@ -32,7 +32,7 @@ float Pos_LinearRampPro_Init(void)
     scanf_s("%f", &goalPos);
 #endif
     position_profile_init(&position_pro_strut, goalPos, initPos_f,
-		90.0f, 180.0f);
+		60.0f, 180.0f);
 	return goalPos;
 }
 

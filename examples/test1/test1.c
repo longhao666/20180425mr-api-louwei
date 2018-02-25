@@ -9,7 +9,7 @@ int32_t fillbuf(JOINT_HANDLE handle, uint16_t len) {
     int32_t ret;
 	int32_t pos, speed;
 	do {
-		ret = jointPush(handle, &pos, &speed, NULL);
+		ret = jointPush(handle, pos, speed, 0);
 	} while (ret == MR_ERROR_OK);
 	return 0;
 }
@@ -32,13 +32,13 @@ int main(int argc, char const *argv[])
     startMaster("pcanusb1", 0);
     printf("Master Started\n");
     
-    setControlLoopFreq(200);
+//    setControlLoopFreq(200);
     joint1 = jointUp(0x01, MASTER(0));
     if (joint1) {
         if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == 0){
 			printf("Set mode to speed loop\n");
         }
-        jointStartServo(joint1, fillbuf);
+//        jointStartServo(joint1, fillbuf);
 		//jointSetPosition(joint1, 65536, 1000, NULL);
 		jointGetPosition(joint1, NULL, 1000, NULL);
     }
