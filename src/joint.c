@@ -190,6 +190,9 @@ int32_t __stdcall degree2pulse(float pos_f) {
 int32_t __stdcall jointPush(JOINT_HANDLE h, float pos, float speed, float current _DEF_ARG) {
 	Joint* pJoint = (Joint*)h;
 	int32_t buf[3] = {0};
+	if (!pJoint) {
+		return MR_ERROR_ILLDATA;
+	}
 //    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
 //        return MR_ERROR_QXMTFULL;
 //    }
@@ -210,8 +213,9 @@ int32_t __stdcall jointPush(JOINT_HANDLE h, float pos, float speed, float curren
 int32_t __stdcall jointPoll(JOINT_HANDLE h, float* pos, float* speed, float* current) {
 	Joint* pJoint = (Joint*)h;
 	int32_t temp;
-	if (!pJoint)
+	if (!pJoint) {
 		return MR_ERROR_ILLDATA;
+	}
 	if (pos) {
 		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
 		*pos = (float)temp / 65536.0f * 360.0f; // degree
