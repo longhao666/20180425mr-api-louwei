@@ -3,7 +3,6 @@
 
 #define UNUSED(arg) (void)arg
 
-int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
 CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
@@ -40,20 +39,17 @@ int32_t __stdcall startMaster(const char* busname, uint8_t masterId) {
 	  return MR_ERROR_ILLDATA;
   }
   hCan[masterId] = canOpen_driver(busname, "1M");
-  // Use CAN1 as the device
 
   // Create and Start thread to read CAN message
   CreateReceiveTask(hCan[masterId], &hReceiveTask[masterId], _canReadISR);
-
-  // StartTimerLoop(-1, jointPeriodSend);
 
   return MR_ERROR_OK;
 }
 
 int32_t __stdcall stopMaster(uint8_t masterId) {
   hCan[masterId] = 0;
-//  StopTimerLoop();
   DestroyReceiveTask(&hReceiveTask[masterId]);
+  canClose_driver(hCan[masterId]);
   return MR_ERROR_OK;
 }
 
@@ -63,13 +59,3 @@ int32_t __stdcall joinMaster(uint8_t masterId) {
   DestroyReceiveTask(&hReceiveTask[masterId]);
   return MR_ERROR_OK;
 }
-
-int32_t __stdcall setControlLoopFreq(int32_t hz) {
-  float val = 0;
-  if (hz != -1) {
-      val = 1000000.0f/(float)hz;
-  }
-  setTimerInterval((uint32_t)round(val));
-  return MR_ERROR_OK;
-}
-

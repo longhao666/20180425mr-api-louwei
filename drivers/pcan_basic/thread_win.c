@@ -10,16 +10,7 @@
 //// Timer is the same when different can device is open
 static struct timeval last_sig;
 
-HANDLE timer = NULL;
-DWORD timebuffer;
-HANDLE timer_thread = NULL;
-volatile int stop_timer = 1;
-
 int32_t recTaskInitFlag = 0;
-
-TIMEVAL timerVal = MS_TO_TIMEVAL(1); //default 5ms
-
-void setTimer(TIMEVAL value);
 
 void usleep(__int64 usec)
 {
@@ -33,89 +24,6 @@ void usleep(__int64 usec)
     WaitForSingleObject(timer, INFINITE);
     CloseHandle(timer);
 }
-
-void setTimerInterval(uint32_t t) {
-    timerVal = t;
-    setTimer(timerVal);
-}
-
-static void (*canTxPeriodic)(DWORD* tv) = NULL;
-/// It's a cycle timer
-int TimerThreadLoop(LPVOID arg)
-{
-	timer = CreateWaitableTimer(NULL, FALSE, NULL);
-	if (NULL == timer)
-	{
-		ILOG("CreateWaitableTimer failed (%d)", GetLastError());
-	}
-
-	ILOG("Go into TimerThreadLoop");
-    while(!stop_timer)
-    {
-        WaitForSingleObject(timer, INFINITE);
-		setTimer(timerVal);
-		if(stop_timer)
-            break;
-		//        EnterMutex();
-        timebuffer = GetTickCount();
-        canTxPeriodic(&timebuffer);
-//        LeaveMutex();
-    }
-	ILOG("Go out of TimerThreadLoop");
-	return 0;
-}
-
-void StartTimerLoop(int32_t hz, void* periodCall)
-{
-	unsigned long timer_thread_id;
-	float val = 0;
-
-	if (stop_timer == 0) {
-		ILOG("Timer has already been started");
-		return;
-	}
-
-	stop_timer = 0;
-	canTxPeriodic = periodCall;
-
-    timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, NULL, 0, &timer_thread_id);
-	if (hz != -1) {
-		val = 1000000.0f / (float)hz;
-	}
-	setTimerInterval(round(val));
-}
-
-void StopTimerLoop(void)//TimerCallback_t exitfunction)
-{
-    stop_timer = 1;
-    setTimer(0);
-    if(WaitForSingleObject(timer_thread, 1000) == WAIT_TIMEOUT)
-    {
-        TerminateThread(timer_thread, -1);
-    }
-    CloseHandle(timer);
-    CloseHandle(timer_thread);
-}
-
-#define maxval(a,b) ((a>b)?a:b)
-void setTimer(TIMEVAL value) //us
-{
-    if(value == TIMEVAL_MAX)
-        CancelWaitableTimer(timer);
-    else
-    {
-        LARGE_INTEGER liDueTime;
-
-        /* arg 2 of SetWaitableTimer take 100 ns interval */
-        liDueTime.QuadPart = ((long long) (-1) * value * 10);
-
-        if (!SetWaitableTimer(timer, &liDueTime, 0, NULL, NULL, FALSE))
-        {
-            ILOG("SetWaitableTimer failed (%d)", GetLastError());
-        }
-    }
-}
-
 
 void canReceiveLoop_signal(int sig)
 {

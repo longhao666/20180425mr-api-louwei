@@ -193,19 +193,16 @@ int32_t __stdcall jointPush(JOINT_HANDLE h, float pos, float speed, float curren
 	if (!pJoint) {
 		return MR_ERROR_ILLDATA;
 	}
-//    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_SERVO_BUFS) { //full
-//        return MR_ERROR_QXMTFULL;
-//    }
 	buf[0] = (int32_t)(pos / 360.0f*65536.0f);
 	buf[1] = (int32_t)(speed / 360.0f*65536.0f*(float)(*pJoint->jointRatio));
 	buf[2] = (int32_t)(current *1000.0f);
 
-//	writeEntryNR(pJoint->basicModule, SYS_POSITION_L, &buf[0], 4);
+	//	writeEntryNR(pJoint->basicModule, TAG_POSITION_L, &buf[0], 4);
+	//	writeEntryNR(pJoint->basicModule, TAG_SPEED_L, &buf[1], 4);
+	//	writeEntryNR(pJoint->basicModule, TAG_CURRET_L, &buf[2], 4);
 	// only first 8 bytes will be send to joint
 	writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
 
-//	memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 12);
-//    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_SERVO_BUFS;
     return MR_ERROR_OK;
 }
 
@@ -254,33 +251,6 @@ int32_t __stdcall jointPollScope(JOINT_HANDLE h, float* pos, float* speed, float
 	return MR_ERROR_OK;
 }
 
-int32_t _jointSendPVTSeq(Joint* h) {
-  uint8_t buf[12];
-  Joint* pJoint = (Joint*)h;
-  uint16_t len = (pJoint->txQueRear + MAX_SERVO_BUFS - pJoint->txQueFront) % MAX_SERVO_BUFS;
-  if (len < WARNING_SERVO_BUFS) {
-	  if (pJoint->jointBufUnderflowHandler)
-		  pJoint->jointBufUnderflowHandler(pJoint, len);
-	  else return -2; //Sevo stopped
-  }
-  if (len == 0) {//empty
-	  writeSyncMsg(pJoint->basicModule, 0x200, NULL);
-  }
-  memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 12);
-  pJoint->txQueFront = (pJoint->txQueFront + 1) % MAX_SERVO_BUFS;
-  // only first 8 bytes will be send to joint
-  writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
-
-  return MR_ERROR_OK;
-}
-
-// called by master in timerThread
-int32_t jointPeriodSend(void* tv) {
-  for (int16_t i = 0; i < jointNbr; i++) {
-    _jointSendPVTSeq(jointStack[i]);
-  }
-  return MR_ERROR_OK;
-}
 
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_CURRENT_L, SYS_CURRENT_H};
@@ -304,10 +274,6 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   pJoint->jointType = (uint16_t*)&(pModule->memoryTable[SYS_MODEL_TYPE]);
 
   pJoint->isOnline = JOINT_OFFLINE;
-  pJoint->txQueFront = 0;
-  pJoint->txQueRear = 0;
-  memset((void*)(pJoint->txQue), 0, sizeof(rec_t)*MAX_SERVO_BUFS);
-  pJoint->jointBufUnderflowHandler = NULL;
 
   setSyncReceiveMap(pJoint->basicModule, indexMap);
 
@@ -330,16 +296,16 @@ int32_t jointDestruct(Joint* pJoint) {
   return MR_ERROR_ILLDATA;
 }
 
-void __stdcall jointStartServo(JOINT_HANDLE h, jQueShortHandler_t handler) {
-	Joint* pJoint = (Joint*)h;
-    if (pJoint)
-        pJoint->jointBufUnderflowHandler = handler;
-}
+//void __stdcall jointStartServo(JOINT_HANDLE h, jQueShortHandler_t handler) {
+//	Joint* pJoint = (Joint*)h;
+//    if (pJoint)
+//        pJoint->jointBufUnderflowHandler = handler;
+//}
 
-void __stdcall jointStopServo(JOINT_HANDLE h) {
-	Joint* pJoint = (Joint*)h;
-	pJoint->jointBufUnderflowHandler = NULL;
-}
+//void __stdcall jointStopServo(JOINT_HANDLE h) {
+//	Joint* pJoint = (Joint*)h;
+//	pJoint->jointBufUnderflowHandler = NULL;
+//}
 
 JOINT_HANDLE __stdcall jointSelect(uint16_t id) {
   uint16_t i;
@@ -528,7 +494,7 @@ int32_t __stdcall jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, i
 	return jointGet(LIT_MAX_ACC, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGePositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetPositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
 	return jointGet(LIT_MIN_POSITION_L, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 

@@ -7,8 +7,6 @@
 
 #define MAX_CAN_DEVICES 4
 #define MAX_JOINTS 14
-#define MAX_SERVO_BUFS 128
-#define WARNING_SERVO_BUFS 20
 
 #define BAUD_CAN_250K			0x0000		//250K
 #define BAUD_CAN_500K			0x0001		//500K
@@ -148,11 +146,6 @@ typedef struct td_joint
 	uint16_t* jointType;
 	uint16_t* jointRatio;
 	uint8_t isOnline;
-
-	rec_t txQue[MAX_SERVO_BUFS];
-	uint16_t txQueFront;
-	uint16_t txQueRear;
-	jQueShortHandler_t jointBufUnderflowHandler;
 }Joint;
 
 ///For advanced users

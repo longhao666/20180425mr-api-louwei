@@ -21,7 +21,7 @@ EXPORTS
 	jointGetMode @21
 	jointGetMaxSpeed @22
 	jointGetMaxAcceleration @23
-	jointGePositionLimit @24
+	jointGetPositionLimit @24
 	jointGetCurrP @25
 	jointGetCurrI @26
 	jointGetSpeedP @27

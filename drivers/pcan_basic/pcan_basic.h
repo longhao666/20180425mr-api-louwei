@@ -25,10 +25,7 @@ CAN_HANDLE canOpen_driver(const char* busno, const char* baud);
 void canReset_driver(CAN_HANDLE handle, char* baud);
 uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m);
 uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m);
-
-void setTimerInterval(uint32_t t);
-void StartTimerLoop(int32_t hz, void* periodCall);
-void StopTimerLoop(void);
+int canClose_driver(CAN_HANDLE handle);
 
 #ifdef __cplusplus
 }
