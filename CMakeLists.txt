@@ -3,86 +3,72 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
 SET(LIB_NAME mrapi)
 SET(${LIB_NAME}_SOURCE_DIR .)
 
-PROJECT(${LIB_NAME} LANGUAGES C)
+# The version number.
+set (${LIB_NAME}_VERSION_MAJOR 1)
+set (${LIB_NAME}_VERSION_MINOR 0)
+set (${LIB_NAME}_VERSION_PATCH 0)
+set (${LIB_NAME}_VERSION_STRING ${${LIB_NAME}_VERSION_MAJOR}.${${LIB_NAME}_VERSION_MINOR}.${${LIB_NAME}_VERSION_PATCH})
+
+PROJECT(${LIB_NAME})
 
 MESSAGE("${LIB_NAME}_SOURCE_DIR : ${${LIB_NAME}_SOURCE_DIR}")
 
-SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_BUILD_TYPE Release)
 #SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 SET(EXECUTABLE_OUTPUT_PATH ${${LIB_NAME}_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH    ${${LIB_NAME}_SOURCE_DIR}/lib)
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${${LIB_NAME}_SOURCE_DIR}/lib)
 
-SET(USE_CAN_DRIVER "pcanbasic")
 ADD_DEFINITIONS(-DLinux)
-#ADD_DEFINITIONS(-D(__stdcall))
-#ADD_DEFINITIONS(-DXENOMAI)
-#ADD_DEFINITIONS(-DNOT_USE_DYNAMIC_LOADING)
 
 INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/include)
 
-IF(${USE_CAN_DRIVER} MATCHES "pcanbasic")
-        MESSAGE("using pcanbasic")
-        ADD_DEFINITIONS(-DPCAN_BASIC)
-        FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib  NO_DEFAULT_PATH)
-        MESSAGE(${CAN_DRIVER_LIB})
-        INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
-        INCLUDE_DIRECTORIES(/usr/include)
-        SET(DRIVER_SRC
-                ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
-                ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_linux.c
-        )
-ELSE(${USE_CAN_DRIVER} MATCHES "pcan")
-        MESSAGE("using peak driver")
-        ADD_DEFINITIONS(-DCAN_PEAK_LINUX)
-        FIND_LIBRARY(CAN_DRIVER_LIB		 NAMES pcan PATHS /usr/lib     NO_DEFAULT_PATH)  #libpcan.so
-        INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux)
-        SET(DRIVER_SRC
-                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.c
-                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/thread_linux.c
-        )
-        SET(DRIVER_INCS
-                ${${LIB_NAME}_SOURCE_DIR}/drivers/can_peak_linux/can_peak_linux.h
-        )
-ENDIF()
+MESSAGE("using pcanbasic")
+ADD_DEFINITIONS(-DPCAN_BASIC)
+FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib  NO_DEFAULT_PATH)
+MESSAGE(${CAN_DRIVER_LIB})
+INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
+INCLUDE_DIRECTORIES(/usr/include)
+SET(DRIVER_SRC
+      ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
+      ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_linux.c
+)
 
 #LINK_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/INSTALL/lib/)
 
 SET(SRC_SRCS
-	${${LIB_NAME}_SOURCE_DIR}/src/module.c
-	${${LIB_NAME}_SOURCE_DIR}/src/joint.c
-        ${${LIB_NAME}_SOURCE_DIR}/src/master.c
-        ${${LIB_NAME}_SOURCE_DIR}/src/logger.c
+      ${${LIB_NAME}_SOURCE_DIR}/src/module.c
+      ${${LIB_NAME}_SOURCE_DIR}/src/joint.c
+      ${${LIB_NAME}_SOURCE_DIR}/src/master.c
+      ${${LIB_NAME}_SOURCE_DIR}/src/logger.c
 )
 
 SET(LIBCF_INCS
-        ${${LIB_NAME}_SOURCE_DIR}/include/mrapi.h
+      ${${LIB_NAME}_SOURCE_DIR}/include/mrapi.h
 )
 
 SET(SRCS
-	${SRC_SRCS}
-	${DRIVER_SRC}
+      ${SRC_SRCS}
+      ${DRIVER_SRC}
 )
 
-
 ADD_LIBRARY(${LIB_NAME} SHARED ${SRCS})
+set_target_properties(${LIB_NAME} PROPERTIES VERSION ${${LIB_NAME}_VERSION_STRING}
+        SOVERSION ${${LIB_NAME}_VERSION_MAJOR})
 #ADD_LIBRARY(${LIB_NAME} STATIC ${SRCS})
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${CAN_DRIVER_LIB})
 TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm)
 
 ADD_SUBDIRECTORY(./examples/test1 test1)
-#ADD_SUBDIRECTORY(./examples/test2 test2)
-#ADD_EXECUTABLE(test1 ./examples/test1/test1.c ${SRCS})
-#TARGET_LINK_LIBRARIES(test1 ${LIB_NAME})
-
-#SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${XENOMAI_CFLAGS}")
-#SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES LINK_FLAGS "${XENOMAI_LDFLAGS}")
 
 INSTALL(TARGETS ${LIB_NAME}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib/MRAPI
         ARCHIVE DESTINATION libstatic
 )
-INSTALL(FILES ${LIBCF_INCS} DESTINATION lib/)
+INSTALL(FILES ${LIBCF_INCS} DESTINATION include/MRAPI)
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake" "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake" IMMEDIATE @ONLY)
+add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
 

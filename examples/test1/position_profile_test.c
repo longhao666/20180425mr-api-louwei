@@ -113,7 +113,7 @@ int main()
 		}
 		goalPos = Pos_LinearRampPro_Init();
 	}
-    StartTimerLoop(100, TimerThreadLoop);
+    StartTimerLoop(200, TimerThreadLoop);
 
 	joinMaster(MASTER(0));
 
