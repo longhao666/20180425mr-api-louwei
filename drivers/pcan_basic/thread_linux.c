@@ -27,7 +27,7 @@ void* canReceiveLoop(void* arg)
     int ret;
     TPCANStatus status;
     fd_set Fds;
-    CAN_HANDLE handle = *(CAN_HANDLE*)arg;
+    CAN_HANDLE handle = (CAN_HANDLE)arg;
     Message rxMsg = Message_Initializer;
     pthread_mutex_t CanThread_mutex;
 
@@ -74,7 +74,7 @@ void CreateReceiveTask(CAN_HANDLE handle, TASK_HANDLE* Thread, void* ReceiveLoop
         return;
     }
 
-    if(pthread_create(Thread, NULL, canReceiveLoop, (void*)&handle)) {
+    if(pthread_create(Thread, NULL, canReceiveLoop, (void*)handle)) {
         ELOG("pthread_create()\n");
     }
     while (recTaskInitFlag == 0) {sleep(0);}

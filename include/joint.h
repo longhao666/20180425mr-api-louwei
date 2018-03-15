@@ -6,7 +6,7 @@
 #define CMDMAP_LEN            160    //
 
 #define MAX_CAN_DEVICES 4
-#define MAX_JOINTS 14
+#define MAX_JOINTS 20
 
 #define BAUD_CAN_250K			0x0000		//250K
 #define BAUD_CAN_500K			0x0001		//500K
