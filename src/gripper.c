@@ -1,5 +1,8 @@
 ﻿#include "gripper.h"
 
+// 内存控制表宏定义
+#define CMDMAP_LEN				80			//内存控制表总长度（半字单位）
+
 //内存控制表读写权限
 uint8_t gripper_accessType[5][16] =
 {
@@ -294,7 +297,7 @@ int32_t __stdcall gripperGetTorque(GRIPPER_HANDLE pGripper, uint32_t* data, int3
 }
 
 int32_t __stdcall gripperGetMode(GRIPPER_HANDLE pGripper, uint16_t* data, int32_t timeout, Callback_t callBack) {
-	return gripperGet(TAG_WORK_MODE, 2, (Gripper*)pGripper, data, timeout, callBack);
+	return gripperGet(TAG_MODE, 2, (Gripper*)pGripper, data, timeout, callBack);
 }
 
 int32_t __stdcall gripperGetMaxSpeed(GRIPPER_HANDLE pGripper, uint16_t* data, int32_t timeout, Callback_t callBack) {
@@ -325,7 +328,7 @@ int32_t __stdcall gripperSetClearError(GRIPPER_HANDLE pGripper, int32_t timeout,
 
 int32_t __stdcall gripperSetMode(GRIPPER_HANDLE pGripper, gripperMode_t mode, int32_t timeout, Callback_t callBack) { //us
 	if (isGripperMode(mode)) {
-		return gripperSet(TAG_WORK_MODE, 2, (Gripper*)pGripper, (void*)&mode, timeout, callBack);
+		return gripperSet(TAG_MODE, 2, (Gripper*)pGripper, (void*)&mode, timeout, callBack);
 	}
 	return MR_ERROR_ILLDATA;
 }
@@ -349,6 +352,13 @@ int32_t __stdcall gripperSetPosition(GRIPPER_HANDLE pGripper, int16_t left_posit
 	return gripperSet(TAG_POSITION_LEFT, 4, (Gripper*)pGripper, (void*)buf, timeout, callBack);
 }
 
+int32_t __stdcall gripperSetOpenState(GRIPPER_HANDLE pGripper, uint16_t openstate, int32_t timeout, Callback_t callBack) { //us
+	return gripperSet(TAG_OPEN_STA, 2, (Gripper*)pGripper, (void*)&openstate, timeout, callBack);
+}
+
+int32_t __stdcall gripperSetOpenAngle(GRIPPER_HANDLE pGripper, uint16_t openangle, int32_t timeout, Callback_t callBack) { //us
+	return gripperSet(TAG_OPEN_ANGLE, 2, (Gripper*)pGripper, (void*)&openangle, timeout, callBack);
+}
 
 
 

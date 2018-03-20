@@ -85,6 +85,7 @@ typedef enum {
 #define ERROR_MASK_POTEN          0x0040    // Poten Error
 #define ERROR_MASK_CURRENT_INIT   0x0080    // Current calibration Error
 #define ERROR_MASK_FUSE           0x0100    // Fuse off
+#define ERROR_MASK_RX28			  0x0200	// rx28 error
 
 // Represent the Scope bit mask
 // 
@@ -97,14 +98,14 @@ typedef enum {
 
 // 
 // 
-#define UPDATE_LEFT_SPD 0x01
-#define UPDATE_LEFT_POS 0x02
-#define UPDATE_LEFT_TMP 0x04
-#define UPDATE_LEFT_TRQ 0x08
-#define UPDATE_RIGHT_SPD 0x10
-#define UPDATE_RIGHT_POS 0x20
-#define UPDATE_RIGHT_TMP 0x40
-#define UPDATE_RIGHT_TRQ 0x80
+#define UPDATE_LEFT_SPD				0x01
+#define UPDATE_LEFT_POS				0x02
+#define UPDATE_LEFT_TMP				0x04
+#define UPDATE_LEFT_TRQ				0x08
+#define UPDATE_RIGHT_SPD			0x10
+#define UPDATE_RIGHT_POS			0x20
+#define UPDATE_RIGHT_TMP			0x40
+#define UPDATE_RIGHT_TRQ			0x80
 
 
 #define isJointType(t) (t==MODEL_TYPE_M14)||(t==MODEL_TYPE_M17)||(t==MODEL_TYPE_M17V2)||(t==MODEL_TYPE_M20)||(t==MODEL_TYPE_M20V2) \
@@ -1103,6 +1104,32 @@ int32_t __stdcall gripperSetPosition(
 int32_t __stdcall gripperSetUpdate(
 	GRIPPER_HANDLE pGripper, 
 	uint16_t mask, 
+	int32_t timeout, 
+	Callback_t callBack);
+
+/// <summary> Gripper set open state. </summary>
+/// <remarks> Louwei, 2018/3/20. </remarks>
+/// <param name="pGripper"> 	The gripper. </param>
+/// <param name="openstate">	The openstate. </param>
+/// <param name="timeout">  	The timeout. </param>
+/// <param name="callBack"> 	The call back. </param>
+/// <returns> An int32_t. </returns>
+int32_t __stdcall gripperSetOpenState(
+	GRIPPER_HANDLE pGripper, 
+	uint16_t openstate, 
+	int32_t timeout, 
+	Callback_t callBack);
+
+/// <summary> Gripper set open angle. </summary>
+/// <remarks> Louwei, 2018/3/20. </remarks>
+/// <param name="pGripper"> 	The gripper. </param>
+/// <param name="openangle">	The openangle. </param>
+/// <param name="timeout">  	The timeout. </param>
+/// <param name="callBack"> 	The call back. </param>
+/// <returns> An int32_t. </returns>
+int32_t __stdcall gripperSetOpenAngle(
+	GRIPPER_HANDLE pGripper, 
+	uint16_t openangle, 
 	int32_t timeout, 
 	Callback_t callBack);
 

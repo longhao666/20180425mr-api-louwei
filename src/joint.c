@@ -2,6 +2,8 @@
 #include <string.h>
 #include "joint.h"
 
+#define CMDMAP_LEN            160    //
+
 //内存控制表读写权限
 const uint8_t joint_accessType[10][16] = 
 {

@@ -3,8 +3,6 @@
 #include "mrapi.h"
 #include "module.h"
 
-#define CMDMAP_LEN            160    //
-
 //#define BAUD_CAN_250K			0x0000		//250K
 //#define BAUD_CAN_500K			0x0001		//500K
 //#define BAUD_CAN_1M				0x0002		//1M
@@ -20,12 +18,12 @@
 #define SYS_REDU_RATIO        0x07    //模块减速比
 //#define SYS_BAUDRATE_232      0x08    //232端口波特率
 #define SYS_BAUDRATE_CAN      0x09    //CAN总线波特率
-#define SYS_ENABLE_DRIVER     0x0a    //驱动器使能标志
-#define SYS_ENABLE_ON_POWER   0x0b    //上电使能驱动器标志
-#define SYS_SAVE_TO_FLASH     0x0c    //保存数据到Flash标志
-#define SYS_IAP               0x0d    //下次上电进入bootloader
-#define SYS_SET_ZERO_POS      0x0e    //将当前位置设置为零点标志
-#define SYS_CLEAR_ERROR       0x0f    //清除错误标志
+#define SYS_ENABLE_DRIVER     0x0A    //驱动器使能标志
+#define SYS_ENABLE_ON_POWER   0x0B    //上电使能驱动器标志
+#define SYS_SAVE_TO_FLASH     0x0C    //保存数据到Flash标志
+#define SYS_IAP               0x0D    //下次上电进入bootloader
+#define SYS_SET_ZERO_POS      0x0E    //将当前位置设置为零点标志
+#define SYS_CLEAR_ERROR       0x0F    //清除错误标志
 
 #define SYS_CURRENT_L         0x10    //当前电流低16位（mA）
 #define SYS_CURRENT_H         0x11    //当前电流高16位（mA）
