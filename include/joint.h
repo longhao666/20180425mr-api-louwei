@@ -5,12 +5,9 @@
 
 #define CMDMAP_LEN            160    //
 
-#define MAX_CAN_DEVICES 4
-#define MAX_JOINTS 20
-
-#define BAUD_CAN_250K			0x0000		//250K
-#define BAUD_CAN_500K			0x0001		//500K
-#define BAUD_CAN_1M				0x0002		//1M
+//#define BAUD_CAN_250K			0x0000		//250K
+//#define BAUD_CAN_500K			0x0001		//500K
+//#define BAUD_CAN_1M				0x0002		//1M
 
 /// proctocol definition
 //系统状态相关
@@ -145,7 +142,6 @@ typedef struct td_joint
 	uint16_t* jointId;
 	uint16_t* jointType;
 	uint16_t* jointRatio;
-	uint8_t isOnline;
 }Joint;
 
 ///For advanced users
@@ -155,8 +151,8 @@ extern "C" {
 #else
 #define _DEF_ARG
 #endif
-int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
-int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack);
+int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack);
+int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack);
 #ifdef __cplusplus
 }
 #endif

@@ -112,6 +112,7 @@ int main()
 	HANDLE timer_thread = NULL;
 	unsigned long timer_thread_id;
 	JOINT_HANDLE joint1;
+	GRIPPER_HANDLE gripper1;
 	float goalPos = 0;
 
 	startMaster("pcanusb1", MASTER(0));
@@ -119,12 +120,20 @@ int main()
 
 	joint1 = jointUp(0x01, MASTER(0));
 	if (joint1) {
-		if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == MR_ERROR_ACK1) {
+		if (jointSetMode(joint1, joint_cyclesync, 1000, NULL) == MR_ERROR_ACK1) {
 			printf("Set mode to MODE_CYCLESYNC.\n");
 		}
 		goalPos = Pos_LinearRampPro_Init();
+		timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, joint1, 0, &timer_thread_id);
 	}
-	timer_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TimerThreadLoop, joint1, 0, &timer_thread_id);
+	gripper1 = gripperUp(8, MASTER(0));
+
+	if (gripper1) {
+		if (gripperSetMode(gripper1, gripper_servo, 1000, NULL) == MR_ERROR_OK) {
+			gripperPush(gripper1, 0, 0);
+		}
+
+	}
 
 	joinMaster(MASTER(0));
 #ifdef _WINDOWS

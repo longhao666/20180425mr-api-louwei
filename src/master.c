@@ -27,6 +27,11 @@ void _canReadISR(Message* msg) {
   Joint* pJoint = jointSelect(id);
   if (pJoint && pJoint->basicModule)
       canDispatch(pJoint->basicModule, msg);
+  else {
+	  Gripper* pGripper = gripperSelect(id);
+	  if (pGripper && pGripper->basicModule)
+		  canDispatch(pGripper->basicModule, msg);
+  }
 }
 
 int32_t __stdcall startMaster(const char* busname, uint8_t masterId) {

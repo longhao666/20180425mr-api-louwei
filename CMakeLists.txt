@@ -35,6 +35,7 @@ SET(DRIVER_SRC
 SET(SRC_SRCS
       ${${LIB_NAME}_SOURCE_DIR}/src/module.c
       ${${LIB_NAME}_SOURCE_DIR}/src/joint.c
+      ${${LIB_NAME}_SOURCE_DIR}/src/gripper.c
       ${${LIB_NAME}_SOURCE_DIR}/src/master.c
       ${${LIB_NAME}_SOURCE_DIR}/src/logger.c
 )

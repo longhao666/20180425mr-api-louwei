@@ -2,9 +2,6 @@
 #include <string.h>
 #include "joint.h"
 
-#define JOINT_OFFLINE 0
-#define JOINT_ONLINE 1
-
 //内存控制表读写权限
 const uint8_t joint_accessType[10][16] = 
 {
@@ -136,47 +133,11 @@ const uint8_t joint_accessType[10][16] =
     },
 };
 
-#define CMD_IN_PROGRESS -1
-#define CMD_ACK_OK      1
-#define CMD_ACK_NOK      2
-#define CMD_IDLE        0
 
 extern canSend_t hCansendHandler[MAX_CAN_DEVICES];
 
-jCallback_t jointRxCb[CMDMAP_LEN] = { NULL };  // call back of read Joint ID
-jCallback_t jointTxCb[CMDMAP_LEN] = { NULL };  // call back of read Joint ID
 Joint* jointStack[MAX_JOINTS];    // online joint stack
 uint16_t jointNbr = 0;
-int32_t rx_flag[CMDMAP_LEN] = {CMD_IDLE};
-int32_t tx_flag[CMDMAP_LEN] = {CMD_IDLE};
-
-
-// callback of read command
-int32_t _onCommonReadEntry(void* module, uint16_t index, void* args) {
-  Module* d = (Module*)module;
-  rx_flag[index] = CMD_ACK_OK;
-  if (jointRxCb[index] != NULL) {
-	  jointRxCb[index](*d->moduleId, index, (void*)&d->memoryTable[index]);
-	  //jointRxCb[index] = NULL;
-  }
-
-  return MR_ERROR_OK;
-}
-
-int32_t _onCommonWriteEntry(void* module, uint16_t index, void* args) {
-  Module* d = (Module*)module;
-  if (*(uint8_t*)args == 1)
-	  tx_flag[index] = CMD_ACK_OK;
-  else
-	  tx_flag[index] = CMD_ACK_NOK;
-
-  if (jointTxCb[index] != NULL) {
-	  jointTxCb[index](*d->moduleId, index, args);
-	  //jointTxCb[index] = NULL;
-  }
-
-  return MR_ERROR_OK;
-}
 
 
 float __stdcall pulse2degree(int32_t pos_q31) {
@@ -260,9 +221,11 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
   pModule = pJoint->basicModule;
   pModule->memoryLen = CMDMAP_LEN;
   pModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  pModule->readFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  pModule->writeFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
   memset(pModule->memoryTable, 0, CMDMAP_LEN* sizeof(uint16_t));
-  pModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
-  pModule->writeDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
+  pModule->readDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));
+  pModule->writeDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));
   pModule->accessType = (uint8_t*)joint_accessType;
 
   pModule->memoryTable[SYS_ID] = id;
@@ -273,7 +236,7 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
 
   pJoint->jointType = (uint16_t*)&(pModule->memoryTable[SYS_MODEL_TYPE]);
 
-  pJoint->isOnline = JOINT_OFFLINE;
+  pJoint->basicModule->isOnline = MODULE_OFFLINE;
 
   setSyncReceiveMap(pJoint->basicModule, indexMap);
 
@@ -289,23 +252,17 @@ int32_t jointDestruct(Joint* pJoint) {
       free(pModule->readDoneCb);
     if (pModule->writeDoneCb)
       free(pModule->writeDoneCb);
-    free(pModule);
+	if (pModule->readFlag)
+		free(pModule->readFlag);
+	if (pModule->writeFlag)
+		free(pModule->writeFlag);
+	free(pModule);
     free(pJoint);
     return MR_ERROR_OK;
   }
   return MR_ERROR_ILLDATA;
 }
 
-//void __stdcall jointStartServo(JOINT_HANDLE h, jQueShortHandler_t handler) {
-//	Joint* pJoint = (Joint*)h;
-//    if (pJoint)
-//        pJoint->jointBufUnderflowHandler = handler;
-//}
-
-//void __stdcall jointStopServo(JOINT_HANDLE h) {
-//	Joint* pJoint = (Joint*)h;
-//	pJoint->jointBufUnderflowHandler = NULL;
-//}
 
 JOINT_HANDLE __stdcall jointSelect(uint16_t id) {
   uint16_t i;
@@ -370,257 +327,202 @@ int32_t __stdcall jointDown(JOINT_HANDLE h) {
 /// Get Information from Joints
 
 /// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
-int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
-	int16_t i;
+int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack) { //us
 	Module* pModule;
 	if (pJoint == NULL) {
 		return MR_ERROR_ILLDATA;
 	}
 	pModule = pJoint->basicModule;
-    if (timeout == -1) {
-		jointRxCb[index] = callBack;
-		readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
-        return MR_ERROR_OK;
-	}
-	//timeout is not INFINITE
-	if (callBack != NULL) WLOG("callback will not work");
-	if (rx_flag[index] == CMD_IN_PROGRESS) {
-		//reading in process
-        return MR_ERROR_BUSY;
-	}
-	rx_flag[index] = CMD_IN_PROGRESS;
-	readEntryCallback(pModule, index, datLen, _onCommonReadEntry);
-	for (i = 0; i < timeout; i++) {
-		if (rx_flag[index] == CMD_ACK_OK) {
-			if (data)
-				memcpy(data, (void*)&(pModule->memoryTable[index]), datLen);
-			rx_flag[index] = CMD_IDLE;
-            return MR_ERROR_OK;
-		}
-		delay_us(1);
-	}
-	rx_flag[index] = CMD_IDLE;
-    return MR_ERROR_TIMEOUT;
+	return moduleGet(index, datLen, pModule, data, timeout, callBack);
 }
+
 /// 如果timeout为infinite且callBack为空，则调用无返回的写函数writeEntryNR
-int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, jCallback_t callBack) { //us
-	int16_t i;
-	int32_t ret;
+int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack) { //us
 	Module* pModule;
 	if (pJoint == NULL) {
 		return MR_ERROR_ILLDATA;
 	}
 	pModule = pJoint->basicModule;
-	if (timeout == -1) { //INFINITE
-		if (callBack == NULL) {
-			writeEntryNR(pModule, index, data, datLen);
-		} else {
-			jointTxCb[index] = callBack;
-			writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
-		}
-        return MR_ERROR_OK;
-	}
-	//timeout is not INFINITE
-	if (callBack != NULL) ILOG("callback will not work");
-	if (tx_flag[index] == CMD_IN_PROGRESS) {
-		//reading in process
-        return MR_ERROR_BUSY;
-	}
-	tx_flag[index] = CMD_IN_PROGRESS;
-	writeEntryCallback(pModule, index, data, datLen, _onCommonWriteEntry);
-	for (i = 0; i < timeout; i++) {
-		if (tx_flag[index] != CMD_IN_PROGRESS) {
-            if (tx_flag[index] == CMD_ACK_OK) ret = MR_ERROR_ACK1;
-            else if (tx_flag[index] == CMD_ACK_NOK) ret = MR_ERROR_ACK0;
-			tx_flag[index] = CMD_IDLE;
-			return ret;
-		}
-		delay_us(1);
-	}
-	tx_flag[index] = CMD_IDLE;
-    return MR_ERROR_TIMEOUT;
+	return moduleSet(index, datLen, pModule, data, timeout, callBack);
 }
 
 /// waiting for n us, if return 0, id will be stored in pJoint
-int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
+int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) { //us
 	return jointGet(SYS_ID, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) { //us
+int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) { //us
 	return jointGet(SYS_MODEL_TYPE, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetError(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetError(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_ERROR, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_VOLTAGE, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetTemp(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetTemp(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_TEMP, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetRatio(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetRatio(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_REDU_RATIO, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetBaudrate(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetBaudrate(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetCurrent(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetCurrent(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_CURRENT_L, 4, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetSpeed(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetSpeed(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_SPEED_L, 4, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetPosition(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetPosition(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(SYS_POSITION_L, 4, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetMode(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetMode(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(TAG_WORK_MODE, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetMaxSpeed(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetMaxSpeed(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(LIT_MAX_SPEED, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(LIT_MAX_ACC, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetPositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetPositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
 	return jointGet(LIT_MIN_POSITION_L, 2, (Joint*)pJoint, data, timeout, callBack);
 }
 
-int32_t __stdcall jointGetCurrP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetCurrP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_CURRENT_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointGetCurrI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetCurrI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_CURRENT_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
 }
 
-int32_t __stdcall jointGetSpeedP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetSpeedP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_SPEED_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointGetSpeedI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetSpeedI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_SPEED_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
 }
 
-int32_t __stdcall jointGetPositionP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetPositionP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_POSITION_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointGetPositionDs(JOINT_HANDLE pJoint, uint16_t* dsValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointGetPositionDs(JOINT_HANDLE pJoint, uint16_t* dsValue, int32_t timeout, Callback_t callBack) {
 	return jointGet(S_POSITION_DS, 2, (Joint*)pJoint, dsValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetID(JOINT_HANDLE pJoint, uint16_t id, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetID(JOINT_HANDLE pJoint, uint16_t id, int32_t timeout, Callback_t callBack) {
 	return jointSet(SYS_ID, 2, (Joint*)pJoint, (void*)&id, timeout, callBack);
 }
 
-int32_t __stdcall jointSetBaudrate(JOINT_HANDLE pJoint, uint16_t baud, int32_t timeout, jCallback_t callBack) { //us
-	if (isJointMode(baud)) {
-		return jointSet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, (void*)&baud, timeout, callBack);
-	}
-	return MR_ERROR_ILLDATA;
+int32_t __stdcall jointSetBaudrate(JOINT_HANDLE pJoint, uint16_t baud, int32_t timeout, Callback_t callBack) { //us
+	return jointSet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, (void*)&baud, timeout, callBack);
 }
 
-int32_t __stdcall jointSetEnable(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetEnable(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, Callback_t callBack) {
 	return jointSet(SYS_ENABLE_DRIVER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPowerOnStatus(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPowerOnStatus(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, Callback_t callBack) {
 	return jointSet(SYS_ENABLE_ON_POWER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
 }
 
-int32_t __stdcall jointSetSave2Flash(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetSave2Flash(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
 	uint16_t isEnable = 1;
 	return jointSet(SYS_SAVE_TO_FLASH, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
 }
 
-int32_t __stdcall jointSetZero(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetZero(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
 	uint16_t isEnable = 1;
 	return jointSet(SYS_SET_ZERO_POS, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
 }
 
-int32_t __stdcall jointSetClearError(JOINT_HANDLE pJoint, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetClearError(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
 	uint16_t isEnable = 1;
 	return jointSet(SYS_CLEAR_ERROR, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
 }
 
-int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, uint16_t mode, int32_t timeout, jCallback_t callBack) { //us
+int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, jointMode_t mode, int32_t timeout, Callback_t callBack) { //us
 	if (isJointMode(mode)) {
 		return jointSet(TAG_WORK_MODE, 2, (Joint*)pJoint, (void*)&mode, timeout, callBack);
 	}
 	return MR_ERROR_ILLDATA;
 }
 
-int32_t __stdcall jointSetSpeed(JOINT_HANDLE pJoint, int32_t speed, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetSpeed(JOINT_HANDLE pJoint, int32_t speed, int32_t timeout, Callback_t callBack) {
 	return jointSet(TAG_SPEED_L, 4, (Joint*)pJoint, (void*)&speed, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, Callback_t callBack) {
 	return jointSet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
 }
 
-int32_t __stdcall jointSetMaxSpeed(JOINT_HANDLE pJoint, int32_t maxspeed, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetMaxSpeed(JOINT_HANDLE pJoint, int32_t maxspeed, int32_t timeout, Callback_t callBack) {
 	return jointSet(LIT_MAX_SPEED, 2, (Joint*)pJoint, (void*)&maxspeed, timeout, callBack);
 }
 
-int32_t __stdcall jointSetMaxAcceleration(JOINT_HANDLE pJoint, int32_t maxacc, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetMaxAcceleration(JOINT_HANDLE pJoint, int32_t maxacc, int32_t timeout, Callback_t callBack) {
 	return jointSet(LIT_MAX_ACC, 2, (Joint*)pJoint, (void*)&maxacc, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPositionLimit(JOINT_HANDLE pJoint, int32_t position_min, int32_t position_max, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPositionLimit(JOINT_HANDLE pJoint, int32_t position_min, int32_t position_max, int32_t timeout, Callback_t callBack) {
 
 	return jointSet(LIT_MIN_POSITION_L, 8, (Joint*)pJoint, (void*)&position_min, timeout, callBack);
 }
 
-int32_t __stdcall jointSetCurrP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetCurrP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_CURRENT_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetCurrI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetCurrI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_CURRENT_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetSpeedP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetSpeedP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_SPEED_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetSpeedI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetSpeedI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_SPEED_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPositionP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPositionP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_POSITION_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPositionD(JOINT_HANDLE pJoint, uint16_t dValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPositionD(JOINT_HANDLE pJoint, uint16_t dValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_POSITION_D, 2, (Joint*)pJoint, (void*)&dValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int32_t timeout, Callback_t callBack) {
 	return jointSet(S_POSITION_DS, 2, (Joint*)pJoint, (void*)&dsValue, timeout, callBack);
 }
 
-int32_t __stdcall jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, Callback_t callBack) {
 	return jointSet(SCP_MASK, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 
-int32_t __stdcall jointSetScpInterval(JOINT_HANDLE pJoint, uint16_t interval, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetScpInterval(JOINT_HANDLE pJoint, uint16_t interval, int32_t timeout, Callback_t callBack) {
 	return jointSet(SCP_REC_TIM, 2, (Joint*)pJoint, (void*)&interval, timeout, callBack);
 }
 
-int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, jCallback_t callBack) {
+int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, Callback_t callBack) {
 	return jointSet(SYS_IAP, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 
