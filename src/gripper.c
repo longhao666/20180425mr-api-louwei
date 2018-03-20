@@ -1,4 +1,6 @@
-﻿#include "gripper.h"
+﻿#include <stdlib.h>
+#include <string.h>
+#include "gripper.h"
 
 // 内存控制表宏定义
 #define CMDMAP_LEN				80			//内存控制表总长度（半字单位）
