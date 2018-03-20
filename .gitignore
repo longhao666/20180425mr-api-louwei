@@ -1,4 +1,7 @@
-Thumbs.db
+*.db
+*.opendb
+*.dll
+*.lib
 *.a
 *.o
 *.obj
@@ -31,3 +34,6 @@ _ReSharper*/
 $tf*/
 _DEL/
 build/
+ipch/
+x64/
+Debug/

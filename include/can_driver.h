@@ -1,17 +1,24 @@
 #ifndef __CAN_DRIVER_H__
 #define __CAN_DRIVER_H__
 
-#include <stdint.h>
 #include <stdio.h>
+#if defined Linux
 #include <unistd.h>
+#include <pthread.h>
+#include <sys/time.h>
+#define TASK_HANDLE pthread_t
 
-#define DEBUG_MSG_CONSOLE_ON
-// #define DEBUG_MSG_CONSOLE_OFF
+#elif defined _WINDOWS
+#include <Windows.h>
+#define TASK_HANDLE HANDLE
+void usleep(__int64 usec);
+#endif
+
+#include "mrapi.h"  //should before logger.h
+#include "logger.h"
 
 #define delay_us(n) usleep(n)
-#define MSG   printf
-#define MSG_WARN(str) printf("Warning: %s\n", str)
-#define MSG_ERROR(str) printf("Error: %s\n", str)
+
 
 /** 
  * @brief The CAN message structure 
@@ -31,13 +38,13 @@ typedef uint8_t (*canSend_t)(Message *);
 static inline void print_message(Message* m)
 {
     int i;
-    MSG("id:%02x ", m->cob_id);
+    char msg[256];
+    sprintf(msg, "id:0x%02X rtr:%d len:%d data:", m->cob_id, m->rtr, m->len);
 
-    MSG(" rtr:%d", m->rtr);
-    MSG(" len:%d", m->len);
     for (i = 0 ; i < m->len ; i++)
-        MSG(" %02x", m->data[i]);
-    MSG("\n");
+        sprintf(msg, "%s 0x%02X",msg, m->data[i]);
+    sprintf(msg, "%s\n", msg);
+    RLOG("%s",msg);
 }
 
 #endif

@@ -1,69 +1,66 @@
 #include <math.h>
-#include <sys/time.h>
 #include "master.h"
 
 #define UNUSED(arg) (void)arg
 
-int32_t jointPeriodSend(void* tv);
 void canDispatch(Module *d, Message *msg);
 
-TASK_HANDLE hReceiveTask1;
-TASK_HANDLE hReceiveTask2;
+CAN_HANDLE hCan[MAX_CAN_DEVICES] = { 0 };
 
-// Max two CAN Ports
-CAN_HANDLE hCan1 = 0;
-CAN_HANDLE hCan2 = 0;
-CAN_HANDLE hCanUsed = 0;
+uint8_t can1Send(Message* msg) { return canSend_driver(hCan[0], msg); }
+uint8_t can2Send(Message* msg) { return canSend_driver(hCan[1], msg); }
+uint8_t can3Send(Message* msg) { return canSend_driver(hCan[2], msg); }
+uint8_t can4Send(Message* msg) { return canSend_driver(hCan[3], msg); }
+uint8_t can5Send(Message* msg) { return 0;/* return canSend_driver(hCan[4], msg); */ }
+uint8_t can6Send(Message* msg) { return 0;/* return canSend_driver(hCan[5], msg); */}
 
-uint8_t can1Send(Message* msg) {
-  return canSend_driver(hCan1, msg);
-}
-
-uint8_t can2Send(Message* msg) {
-  return canSend_driver(hCan2, msg);
-}
+// Max 4 CAN Ports
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES];
+canSend_t hCansendHandler[MAX_CAN_DEVICES] = { can1Send, can2Send, can3Send, can4Send };
 
 /// CAN read thread or interrupt
 void _canReadISR(Message* msg) {
   uint16_t cob_id = msg->cob_id;
-  uint16_t id = geNodeId(cob_id);
+  uint16_t id = getNodeId(cob_id);
 
   // assume module is a joint
   Joint* pJoint = jointSelect(id);
   if (pJoint && pJoint->basicModule)
       canDispatch(pJoint->basicModule, msg);
+  else {
+	  Gripper* pGripper = gripperSelect(id);
+	  if (pGripper && pGripper->basicModule)
+		  canDispatch(pGripper->basicModule, msg);
+  }
 }
 
-int32_t startMaster(void) {
+int32_t __stdcall startMaster(const char* busname, uint8_t masterId) {
   // Open and Initiallize CAN Port
-  hCan1 = canOpen_driver("pcan1", "1M");
-  // Use CAN1 as the device
-  hCanUsed = hCan1;
+  if (masterId >= MAX_CAN_DEVICES) {
+	  return MR_ERROR_ILLDATA;
+  }
+  if (hCan[masterId] != 0) {
+	  ELOG("masterId %d has been combined to CAN device HANDLE 0x%X", masterId, hCan[masterId]);
+	  return MR_ERROR_ILLDATA;
+  }
+  hCan[masterId] = canOpen_driver(busname, "1M");
 
   // Create and Start thread to read CAN message
-  CreateReceiveTask(hCan1, &hReceiveTask1, _canReadISR);
+  CreateReceiveTask(hCan[masterId], &hReceiveTask[masterId], _canReadISR);
 
-  StartTimerLoop(-1, jointPeriodSend);
-
-  return 0;
+  return MR_ERROR_OK;
 }
 
-int32_t stopMaster(void) {
-  StopTimerLoop();
-  DestroyReceiveTask(&hReceiveTask1);
-  return 0;
+int32_t __stdcall stopMaster(uint8_t masterId) {
+  hCan[masterId] = 0;
+  DestroyReceiveTask(&hReceiveTask[masterId]);
+  canClose_driver(hCan[masterId]);
+  return MR_ERROR_OK;
 }
 
-int32_t joinMaster(void) {
-  WaitReceiveTaskEnd(&hReceiveTask1);
+int32_t __stdcall joinMaster(uint8_t masterId) {
+  if ((hCan[masterId] == 0) || masterId >= MAX_CAN_DEVICES)  return MR_ERROR_ILLDATA;
+  WaitReceiveTaskEnd(&hReceiveTask[masterId]);
+  DestroyReceiveTask(&hReceiveTask[masterId]);
+  return MR_ERROR_OK;
 }
-
-int32_t setControlLoopFreq(int32_t hz) {
-  float val = 0;
-  if (hz != -1) {
-      val = 1000000.0/(float)hz;
-  }
-  setTimerInterval(round(val));
-  return 0;
-}
-

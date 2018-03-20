@@ -2,139 +2,7 @@
 #include <string.h>
 #include "joint.h"
 
-#define CMDMAP_LEN            160    //ÄÚ´æ¿ØÖÆ±í×Ü³¤¶È£¨°ë×Öµ¥Î»16bits£©
-
-//系统状态相关
-#define SYS_ID                0x01    //驱动器ID
-#define SYS_MODEL_TYPE        0x02    //驱动器型号
-#define SYS_FW_VERSION        0x03    //固件版本
-#define SYS_ERROR             0x04    //错误代码
-#define SYS_VOLTAGE           0x05    //系统电压
-#define SYS_TEMP              0x06    //系统温度
-#define SYS_REDU_RATIO        0x07    //模块减速比
-//#define SYS_BAUDRATE_232      0x08    //232端口波特率
-#define SYS_BAUDRATE_CAN      0x09    //CAN总线波特率
-#define SYS_ENABLE_DRIVER     0x0a    //驱动器使能标志
-#define SYS_ENABLE_ON_POWER   0x0b    //上电使能驱动器标志
-#define SYS_SAVE_TO_FLASH     0x0c    //保存数据到Flash标志
-//#define SYS_DEMA_ABSPOS       0x0d    //自动标定绝对位置标志
-#define SYS_SET_ZERO_POS      0x0e    //将当前位置设置为零点标志
-#define SYS_CLEAR_ERROR       0x0f    //清除错误标志
-
-#define SYS_CURRENT_L         0x10    //当前电流低16位（mA）
-#define SYS_CURRENT_H         0x11    //当前电流高16位（mA）
-#define SYS_SPEED_L           0x12    //当前速度低16位（units/s）
-#define SYS_SPEED_H           0x13    //当前速度高16位（units/s）
-#define SYS_POSITION_L        0x14    //当前位置低16位（units）
-#define SYS_POSITION_H        0x15    //当前位置高16位（units）
-#define SYS_POTEN_VALUE       0x16    //数字电位器值
-#define SYS_ZERO_POS_OFFSET_L 0x17    //零点位置偏移量低16位（units）
-#define SYS_ZERO_POS_OFFSET_H 0x18    //零点位置偏移量高16位（units）
-
-//电机相关信息
-#define MOT_RES               0x20    //电机内阻
-#define MOT_INDUC             0x21    //电机电感
-#define MOT_RATED_VOL         0x22    //电机额定电压
-#define MOT_RATED_CUR         0x23    //电机额定电流
-//#define MOT_ENC_LINES         0x24    //码盘线数
-//#define MOT_HALL_VALUE        0x25    //当前霍尔状态
-#define MOT_ST_DAT            0x26    //绝对编码器单圈数据
-#define MOT_MT_DAT            0x27    //绝对编码器多圈数据
-#define MOT_ENC_STA           0x28    //绝对编码器状态寄存器
-#define BAT_VOLT              0x29    //编码器电池电压 *10mV
-#define ACC_X                 0x2A    //加速度计x轴 *1000mg
-#define ACC_Y                 0x2B    //加速度计y轴 *1000mg
-#define ACC_Z                 0x2C    //加速度计z轴 *1000mg
-
-//控制目标值
-#define TAG_WORK_MODE         0x30    //工作模式，0-开环，1-电流模式，2-速度模式，3-位置模式
-#define TAG_OPEN_PWM          0x31    //开环模式下占空比（0~100）
-#define TAG_CURRENT_L         0x32    //目标电流低16位（mA）
-#define TAG_CURRENT_H         0x33    //目标电流高16位（mA）
-#define TAG_SPEED_L           0x34    //目标速度低16位（units/s）
-#define TAG_SPEED_H           0x35    //目标速度高16位（units/s）
-#define TAG_POSITION_L        0x36    //目标位置低16位（units）
-#define TAG_POSITION_H        0x37    //目标位置高16位（units）
-
-//控制限制值
-#define LIT_MAX_CURRENT       0x40    //最大电流（mA）
-#define LIT_MAX_SPEED         0x41    //最大速度（rpm）
-#define LIT_MAX_ACC           0x42    //最大加速度（rpm/s）
-#define LIT_MIN_POSITION_L    0x43    //最小位置低16位（units）
-#define LIT_MIN_POSITION_H    0x44    //最小位置高16位（units）
-#define LIT_MAX_POSITION_L    0x45    //最大位置低16位（units）
-#define LIT_MAX_POSITION_H    0x46    //最大位置高16位（units）
-
-//三闭环环相关
-#define SEV_PARAME_LOCKED     0x50    //三闭环参数锁定标志, 0-不锁定(自动切换), 1-低速（S）,2-中速（M）,3-高速（L）
-
-#define S_CURRENT_P           0x51    //电流环P参数
-#define S_CURRENT_I           0x52    //电流环I参数
-#define S_CURRENT_D           0x53    //电流环D参数
-#define S_SPEED_P             0x54    //速度环P参数
-#define S_SPEED_I             0x55    //速度环I参数
-#define S_SPEED_D             0x56    //速度环D参数
-#define S_SPEED_DS            0x57    //速度P死区
-#define S_POSITION_P          0x58    //位置环P参数
-#define S_POSITION_I          0x59    //位置环I参数
-#define S_POSITION_D          0x5A    //位置环D参数
-#define S_POSITION_DS         0x5B    //位置P死区
-#define S_CURRENT_FD          0x5C    //电流前馈
-#define M_CURRENT_FD          0x5D    //电流前馈
-#define L_CURRENT_FD          0x5E    //电流前馈
-
-#define M_CURRENT_P           0x61    //电流环P参数
-#define M_CURRENT_I           0x62    //电流环I参数
-#define M_CURRENT_D           0x63    //电流环D参数
-#define M_SPEED_P             0x64    //速度环P参数
-#define M_SPEED_I             0x65    //速度环I参数
-#define M_SPEED_D             0x66    //速度环D参数
-#define M_SPEED_DS            0x67    //速度P死区
-#define M_POSITION_P          0x68    //位置环P参数
-#define M_POSITION_I          0x69    //位置环I参数
-#define M_POSITION_D          0x6A    //位置环D参数
-#define M_POSITION_DS         0x6B    //位置P死区
-
-#define L_CURRENT_P           0x71    //电流环P参数
-#define L_CURRENT_I           0x72    //电流环I参数
-#define L_CURRENT_D           0x73    //电流环D参数
-#define L_SPEED_P             0x74    //速度环P参数
-#define L_SPEED_I             0x75    //速度环I参数
-#define L_SPEED_D             0x76    //速度环D参数
-#define L_SPEED_DS            0x77    //速度P死区
-#define L_POSITION_P          0x78    //位置环P参数
-#define L_POSITION_I          0x79    //位置环I参数
-#define L_POSITION_D          0x7A    //位置环D参数
-#define L_POSITION_DS         0x7B    //位置P死区
-
-//刹车控制命令
-#define BRAKE_RELEASE_CMD     0x80    //刹车释放命令，0-保持制动，1-释放刹车
-#define BRAKE_STATE           0x81    //刹车状态，0-保持制动，1-释放刹车
-
-//示波器模块子索引地址定义
-#define SCP_MASK              0x90    //记录对象标志MASK
-#define SCP_REC_TIM           0x91    //记录时间间隔（对10kHZ的分频值）
-
-#define SCP_TAGCUR_L          0x92    //目标电流数据集
-#define SCP_TAGCUR_H          0x93    //目标电流数据集
-#define SCP_MEACUR_L          0x94    //实际电流数据集
-#define SCP_MEACUR_H          0x95    //实际电流数据集
-#define SCP_TAGSPD_L          0x96    //目标速度数据集
-#define SCP_TAGSPD_H          0x97    //目标速度数据集
-#define SCP_MEASPD_L          0x98    //实际速度数据集
-#define SCP_MEASPD_H          0x99    //实际速度数据集
-#define SCP_TAGPOS_L          0x9A    //目标位置数据集
-#define SCP_TAGPOS_H          0x9B    //目标位置数据集
-#define SCP_MEAPOS_L          0x9C    //实际位置数据集
-#define SCP_MEAPOS_H          0x9D    //实际位置数据集
-
-//示波器记录对象MASK定义
-#define MASK_TAGCUR         0x0001    //记录目标电流MASK
-#define MASK_MEACUR         0x0002    //记录实际电流MASK
-#define MASK_TAGSPD         0x0004    //记录目标速度MASK
-#define MASK_MEASPD         0x0008    //记录实际速度MASK
-#define MASK_TAGPOS         0x0010    //记录目标位置MASK
-#define MASK_MEAPOS         0x0020    //记录实际位置MASK
+#define CMDMAP_LEN            160    //
 
 //内存控制表读写权限
 const uint8_t joint_accessType[10][16] = 
@@ -153,7 +21,7 @@ const uint8_t joint_accessType[10][16] =
         RW,			//使能驱动器标志
         RW,			//上电使能驱动器标志
         RW,			//保存数据到Flash标志
-        RW,			//自动标定绝对位置标志（本版本已移除）
+        RW,			//下次上电进入bootloader
         RW,			//将当前位置设置为零点标志
         RW,			//清除错误标志
     },
@@ -267,98 +135,110 @@ const uint8_t joint_accessType[10][16] =
     },
 };
 
-#define CMD_IN_PROGRESS -1
-#define CMD_ACK_OK      1
-#define CMD_IDLE        0
 
-//jCallback_t jointCb[CMDMAP_LEN];  // call back of read Joint ID
+extern canSend_t hCansendHandler[MAX_CAN_DEVICES];
+
 Joint* jointStack[MAX_JOINTS];    // online joint stack
 uint16_t jointNbr = 0;
-int16_t rx_flag[CMDMAP_LEN] = {CMD_IDLE};
-int16_t tx_flag[CMDMAP_LEN] = {CMD_IDLE};
 
 
-// callback of read command
-int32_t _onCommonReadEntry(void* module, uint8_t index, void* args) {
-  Module* d = (Module*)module;
-  rx_flag[index] = CMD_ACK_OK;
-
-  return 0;
+float __stdcall pulse2degree(int32_t pos_q31) {
+	return (float)pos_q31 / 65536.0f * 360.0f;  // degree
 }
 
-int32_t _onCommonWriteEntry(void* module, uint8_t index, void* args) {
-  Module* d = (Module*)module;
-  tx_flag[index] = CMD_ACK_OK;
-
-  return 0;
+int32_t __stdcall degree2pulse(float pos_f) {
+	return (int32_t)(pos_f / 360.0f * 65536.0f);
 }
 
-//int32_t _onWriteEntry(void* module, uint8_t index, void* args) {
-//  Module* d = (Module*)handle;
-//  if(index == TAG_WORK_MODE) {
+int32_t __stdcall jointPush(JOINT_HANDLE h, float pos, float speed, float current _DEF_ARG) {
+	Joint* pJoint = (Joint*)h;
+	int32_t buf[3] = {0};
+	if (!pJoint) {
+		return MR_ERROR_ILLDATA;
+	}
+	buf[0] = (int32_t)(pos / 360.0f*65536.0f);
+	buf[1] = (int32_t)(speed / 360.0f*65536.0f*(float)(*pJoint->jointRatio));
+	buf[2] = (int32_t)(current *1000.0f);
 
-//  }
-//  return 0;
-//}
-int32_t jointPush(Joint* pJoint, uint8_t* buf) {
-    if (pJoint->txQueFront == (pJoint->txQueRear+1)%MAX_BUFS) { //full
-        return -1;
-    }
-    memcpy((void*)pJoint->txQue[pJoint->txQueRear], (void*)buf, 8);
-    pJoint->txQueRear = (pJoint->txQueRear+1)%MAX_BUFS;
-    return 0;
+	//	writeEntryNR(pJoint->basicModule, TAG_POSITION_L, &buf[0], 4);
+	//	writeEntryNR(pJoint->basicModule, TAG_SPEED_L, &buf[1], 4);
+	//	writeEntryNR(pJoint->basicModule, TAG_CURRET_L, &buf[2], 4);
+	// only first 8 bytes will be send to joint
+	writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+
+    return MR_ERROR_OK;
 }
 
-int32_t jointPoll(Joint* pJoint, uint8_t* buf) {
-    uint16_t len = (pJoint->txQueRear+MAX_BUFS - pJoint->txQueFront)%MAX_BUFS;
-    if (len < WARNING_BUFS) {
-        if (pJoint->jointBufUnderflowHandler)
-            pJoint->jointBufUnderflowHandler(pJoint, len);
-        else return -1; //Sevo stopped
-    }
-    if (len == 0) {//empty
-        return -1;
-    }
-    memcpy((void*)buf, (void*)pJoint->txQue[pJoint->txQueFront], 8);
-    pJoint->txQueFront = (pJoint->txQueFront+1)%MAX_BUFS;
-    return 0;
+/// 从内存表获取实际位置和实际电流
+int32_t __stdcall jointPoll(JOINT_HANDLE h, float* pos, float* speed, float* current) {
+	Joint* pJoint = (Joint*)h;
+	int32_t temp;
+	if (!pJoint) {
+		return MR_ERROR_ILLDATA;
+	}
+	if (pos) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_POSITION_L]), 4);
+		*pos = (float)temp / 65536.0f * 360.0f; // degree
+	}
+	if (speed) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_SPEED_L]), 4);
+		*speed = (float)temp / 65536.0f * 360.0f; // degree/s
+	}
+	if (current) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SYS_CURRENT_L]), 4);
+		*current = (float)temp / 1000.0f;  // A
+	}
+
+	return MR_ERROR_OK;
 }
 
-int32_t _jointSendPVTSync(Joint* pJoint) {
-  uint8_t buf[8];
+/// 从内存表获取实际位置和实际电流 (通过scope)
+int32_t __stdcall jointPollScope(JOINT_HANDLE h, float* pos, float* speed, float* current) {
+	Joint* pJoint = (Joint*)h;
+	int32_t temp;
+	if (!pJoint)
+		return MR_ERROR_ILLDATA;
+	if (pos) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEAPOS_L]), 4);
+		*pos = (float)temp / 65536.0f * 360.0f; // degree
+	}
+	if (speed) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEASPD_L]), 4);
+		*speed = (float)temp / 65536.0f * 360.0f; // degree/s
+	}
+	if (current) {
+		memcpy(&temp, &(pJoint->basicModule->memoryTable[SCP_MEACUR_L]), 4);
+		*current = (float)temp / 1000.0f;  // A
+	}
 
-  if (jointPoll(pJoint, buf) == 0)
-      writeSyncMsg(pJoint->basicModule, 0x200, (void*)buf);
+	return MR_ERROR_OK;
 }
 
-int32_t jointPeriodSend(void* tv) {
-  for (int16_t i = 0; i < jointNbr; i++) {
-    _jointSendPVTSync(jointStack[i]);
-  }
-}
 
 Joint* jointConstruct(uint16_t id, canSend_t canSend) {
-  uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_SPEED_L, SYS_SPEED_H};
+  uint16_t indexMap[4] = {SYS_POSITION_L, SYS_POSITION_H, SYS_CURRENT_L, SYS_CURRENT_H};
   Joint* pJoint = (Joint*)malloc(sizeof(Joint));
+  Module* pModule;
   pJoint->basicModule = (Module*)malloc(sizeof(Module));
-  pJoint->basicModule->memoryLen = CMDMAP_LEN;
-  pJoint->basicModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
-  pJoint->basicModule->readDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
-  pJoint->basicModule->writeDoneCb = (mCallback_t*)calloc(CMDMAP_LEN, sizeof(mCallback_t));
-  pJoint->basicModule->accessType = (uint8_t*)joint_accessType;
+  pModule = pJoint->basicModule;
+  pModule->memoryLen = CMDMAP_LEN;
+  pModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  pModule->readFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  pModule->writeFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+  memset(pModule->memoryTable, 0, CMDMAP_LEN* sizeof(uint16_t));
+  pModule->readDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));
+  pModule->writeDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));
+  pModule->accessType = (uint8_t*)joint_accessType;
 
-  pJoint->basicModule->memoryTable[SYS_ID] = id;
-  pJoint->jointId = (uint16_t*)&(pJoint->basicModule->memoryTable[SYS_ID]);
-  pJoint->basicModule->moduleId = pJoint->jointId;
-  pJoint->basicModule->canSend = canSend;
+  pModule->memoryTable[SYS_ID] = id;
+  pJoint->jointId = (uint16_t*)&(pModule->memoryTable[SYS_ID]);
+  pJoint->jointRatio = (uint16_t*)&(pModule->memoryTable[SYS_REDU_RATIO]);
+  pModule->moduleId = pJoint->jointId;
+  pModule->canSend = canSend;
 
-  pJoint->jointType = (uint16_t*)&(pJoint->basicModule->memoryTable[SYS_MODEL_TYPE]);
+  pJoint->jointType = (uint16_t*)&(pModule->memoryTable[SYS_MODEL_TYPE]);
 
-  pJoint->isOnline = JOINT_OFFLINE;
-  pJoint->txQueFront = 0;
-  pJoint->txQueRear = 0;
-  memset((void*)(pJoint->txQue), 0, sizeof(rec_t)*MAX_BUFS);
-  pJoint->jointBufUnderflowHandler = NULL;
+  pJoint->basicModule->isOnline = MODULE_OFFLINE;
 
   setSyncReceiveMap(pJoint->basicModule, indexMap);
 
@@ -366,49 +246,72 @@ Joint* jointConstruct(uint16_t id, canSend_t canSend) {
 }
 
 int32_t jointDestruct(Joint* pJoint) {
+  Module* pModule = (Module*)pJoint->basicModule;
   if (pJoint) {
-    if (pJoint->basicModule->memoryTable)
-      free(pJoint->basicModule->memoryTable);
-    if (pJoint->basicModule->readDoneCb)
-      free(pJoint->basicModule->readDoneCb);
-    if (pJoint->basicModule->writeDoneCb)
-      free(pJoint->basicModule->writeDoneCb);
-    free(pJoint->basicModule);
+    if (pModule->memoryTable)
+      free(pModule->memoryTable);
+    if (pModule->readDoneCb)
+      free(pModule->readDoneCb);
+    if (pModule->writeDoneCb)
+      free(pModule->writeDoneCb);
+	if (pModule->readFlag)
+		free(pModule->readFlag);
+	if (pModule->writeFlag)
+		free(pModule->writeFlag);
+	free(pModule);
     free(pJoint);
-    return 0;
+    return MR_ERROR_OK;
   }
-  return -1;
+  return MR_ERROR_ILLDATA;
 }
 
-void jointStartServo(Joint* pJoint, jointBufHandler_t handler) {
-    if (pJoint)
-        pJoint->jointBufUnderflowHandler = handler;
 
-}
-
-void jointStopServo(Joint* pJoint) {
-    pJoint->jointBufUnderflowHandler = NULL;
-}
-
-Joint* jointSelect(uint16_t id) {
+JOINT_HANDLE __stdcall jointSelect(uint16_t id) {
   uint16_t i;
   for (i = 0; i < jointNbr; i++) {
     if (id == *(jointStack[i]->jointId))
-      return jointStack[i];
+      return (JOINT_HANDLE)jointStack[i];
   }
 
   return NULL;
 }
 
-int32_t jointDown(Joint* pJoint) {
+JOINT_HANDLE __stdcall jointUp(uint16_t joindId, uint8_t masterId) {
+	int32_t res, i = 0;
+	Joint* pJoint = jointConstruct(joindId, (canSend_t)hCansendHandler[masterId]);
+
+	if (jointNbr >= MAX_JOINTS) {
+		ELOG("Joint Stack Overflow");
+		return NULL;
+	} else {
+		if (pJoint != jointSelect(*(pJoint->jointId)))
+			jointStack[jointNbr++] = pJoint; // push into stack
+		else return (JOINT_HANDLE)pJoint; // already in the stack
+	}
+	res = jointGetType(pJoint, NULL, 5000, NULL);
+	if ((res == 0) && isJointType(*(pJoint->jointType))) {
+		while ((*(pJoint->jointRatio) == 0) && i < 10) {
+			i++;
+			res = jointGetRatio(pJoint, NULL, 1000, NULL);
+		}
+		if (i < 10)
+			return (JOINT_HANDLE)pJoint;
+	}
+	jointStack[--jointNbr] = NULL; // delete from stack
+	jointDestruct(pJoint);
+	return NULL;
+}
+
+int32_t __stdcall jointDown(JOINT_HANDLE h) {
   uint16_t i;
+  Joint* pJoint = h;
   if (!jointNbr) {
-    MSG_ERROR("Joint Stack Underflow");
-    return -2;
+    ELOG("Joint Stack Underflow");
+    return MR_ERROR_ILLDATA;
   }
   if(!pJoint) {
-    MSG_ERROR("Joint is NULL");
-    return -3;
+    ELOG("Joint is NULL");
+    return MR_ERROR_ILLDATA;
   }
 
   for (i = 0; i < jointNbr; i++) {
@@ -418,115 +321,213 @@ int32_t jointDown(Joint* pJoint) {
   for (; i < jointNbr - 1; i++) {
     jointStack[i] = jointStack[i+1];
   }
-  jointStack[jointNbr--] = NULL;
+  jointStack[--jointNbr] = NULL;
   jointDestruct(pJoint);
-  return 0;
+  return MR_ERROR_OK;
 }
-
-Joint* jointUp(uint16_t id, canSend_t canSend) {
-    int32_t res;
-    Joint* pJoint = jointConstruct(id, canSend);
-    if (jointNbr >= MAX_JOINTS) {
-      MSG_ERROR("Joint Stack Overflow");
-      return NULL;
-    } else {
-      if (pJoint != jointSelect(*(pJoint->jointId)))
-        jointStack[jointNbr++] = pJoint; // push into stack
-      else return pJoint; // already in the stack
-    }
-    res = jointGetTypeTimeout(pJoint, 1000);
-    if ((res == 0) && isJointType(*(pJoint->jointType))) {
-        return pJoint;
-    } else {
-        jointStack[jointNbr--] = NULL; // delete from stack
-        jointDestruct(pJoint);
-        return NULL;
-    }
-}
-
 
 /// Get Information from Joints
-int32_t jointGetId(Joint* pJoint, mCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_ID, 2, callBack);
-  return 0;
+
+/// waiting for n us, if return MR_ERROR_OK, id will be stored in pJoint
+int32_t __stdcall jointGet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack) { //us
+	Module* pModule;
+	if (pJoint == NULL) {
+		return MR_ERROR_ILLDATA;
+	}
+	pModule = pJoint->basicModule;
+	return moduleGet(index, datLen, pModule, data, timeout, callBack);
+}
+
+/// 如果timeout为infinite且callBack为空，则调用无返回的写函数writeEntryNR
+int32_t __stdcall jointSet(uint8_t index, uint8_t datLen, Joint* pJoint, void* data, int32_t timeout, Callback_t callBack) { //us
+	Module* pModule;
+	if (pJoint == NULL) {
+		return MR_ERROR_ILLDATA;
+	}
+	pModule = pJoint->basicModule;
+	return moduleSet(index, datLen, pModule, data, timeout, callBack);
 }
 
 /// waiting for n us, if return 0, id will be stored in pJoint
-int32_t jointGetIdTimeout(Joint* pJoint, int32_t timeout) { //us
-  int16_t i;
-  if (rx_flag[SYS_ID] == CMD_IN_PROGRESS) {
-      //reading in process
-      return -2;
-  }
-  rx_flag[SYS_ID] = CMD_IN_PROGRESS;
-  readEntryCallback(pJoint->basicModule, SYS_ID, 2, _onCommonReadEntry);
-  for (i = 0; i < timeout; i++) {
-      if (rx_flag[SYS_ID] == CMD_ACK_OK) {
-          rx_flag[SYS_ID] = CMD_IDLE;
-          return 0;
-      }
-      delay_us(1);
-  }
-  rx_flag[SYS_ID] = CMD_IDLE;
-  return -1;
+int32_t __stdcall jointGetId(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) { //us
+	return jointGet(SYS_ID, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetType(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) { //us
+	return jointGet(SYS_MODEL_TYPE, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetError(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_ERROR, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetVoltage(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_VOLTAGE, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetTemp(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_TEMP, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetRatio(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_REDU_RATIO, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetBaudrate(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetCurrent(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_CURRENT_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetSpeed(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_SPEED_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetPosition(JOINT_HANDLE pJoint, uint32_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(SYS_POSITION_L, 4, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetMode(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(TAG_WORK_MODE, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetMaxSpeed(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(LIT_MAX_SPEED, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(LIT_MAX_ACC, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetPositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
+	return jointGet(LIT_MIN_POSITION_L, 2, (Joint*)pJoint, data, timeout, callBack);
+}
+
+int32_t __stdcall jointGetCurrP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_CURRENT_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointGetCurrI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_CURRENT_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
+}
+
+int32_t __stdcall jointGetSpeedP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_SPEED_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointGetSpeedI(JOINT_HANDLE pJoint, uint16_t* iValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_SPEED_I, 2, (Joint*)pJoint, iValue, timeout, callBack);
+}
+
+int32_t __stdcall jointGetPositionP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_POSITION_P, 2, (Joint*)pJoint, pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointGetPositionDs(JOINT_HANDLE pJoint, uint16_t* dsValue, int32_t timeout, Callback_t callBack) {
+	return jointGet(S_POSITION_DS, 2, (Joint*)pJoint, dsValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetID(JOINT_HANDLE pJoint, uint16_t id, int32_t timeout, Callback_t callBack) {
+	return jointSet(SYS_ID, 2, (Joint*)pJoint, (void*)&id, timeout, callBack);
+}
+
+int32_t __stdcall jointSetBaudrate(JOINT_HANDLE pJoint, uint16_t baud, int32_t timeout, Callback_t callBack) { //us
+	return jointSet(SYS_BAUDRATE_CAN, 2, (Joint*)pJoint, (void*)&baud, timeout, callBack);
+}
+
+int32_t __stdcall jointSetEnable(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, Callback_t callBack) {
+	return jointSet(SYS_ENABLE_DRIVER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPowerOnStatus(JOINT_HANDLE pJoint, uint16_t isEnable, int32_t timeout, Callback_t callBack) {
+	return jointSet(SYS_ENABLE_ON_POWER, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t __stdcall jointSetSave2Flash(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
+	uint16_t isEnable = 1;
+	return jointSet(SYS_SAVE_TO_FLASH, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t __stdcall jointSetZero(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
+	uint16_t isEnable = 1;
+	return jointSet(SYS_SET_ZERO_POS, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t __stdcall jointSetClearError(JOINT_HANDLE pJoint, int32_t timeout, Callback_t callBack) {
+	uint16_t isEnable = 1;
+	return jointSet(SYS_CLEAR_ERROR, 2, (Joint*)pJoint, (void*)&isEnable, timeout, callBack);
+}
+
+int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, jointMode_t mode, int32_t timeout, Callback_t callBack) { //us
+	if (isJointMode(mode)) {
+		return jointSet(TAG_WORK_MODE, 2, (Joint*)pJoint, (void*)&mode, timeout, callBack);
+	}
+	return MR_ERROR_ILLDATA;
+}
+
+int32_t __stdcall jointSetSpeed(JOINT_HANDLE pJoint, int32_t speed, int32_t timeout, Callback_t callBack) {
+	return jointSet(TAG_SPEED_L, 4, (Joint*)pJoint, (void*)&speed, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, Callback_t callBack) {
+	return jointSet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
+}
+
+int32_t __stdcall jointSetMaxSpeed(JOINT_HANDLE pJoint, int32_t maxspeed, int32_t timeout, Callback_t callBack) {
+	return jointSet(LIT_MAX_SPEED, 2, (Joint*)pJoint, (void*)&maxspeed, timeout, callBack);
+}
+
+int32_t __stdcall jointSetMaxAcceleration(JOINT_HANDLE pJoint, int32_t maxacc, int32_t timeout, Callback_t callBack) {
+	return jointSet(LIT_MAX_ACC, 2, (Joint*)pJoint, (void*)&maxacc, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPositionLimit(JOINT_HANDLE pJoint, int32_t position_min, int32_t position_max, int32_t timeout, Callback_t callBack) {
+
+	return jointSet(LIT_MIN_POSITION_L, 8, (Joint*)pJoint, (void*)&position_min, timeout, callBack);
+}
+
+int32_t __stdcall jointSetCurrP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_CURRENT_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetCurrI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_CURRENT_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetSpeedP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_SPEED_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetSpeedI(JOINT_HANDLE pJoint, uint16_t iValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_SPEED_I, 2, (Joint*)pJoint, (void*)&iValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPositionP(JOINT_HANDLE pJoint, uint16_t pValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_POSITION_P, 2, (Joint*)pJoint, (void*)&pValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPositionD(JOINT_HANDLE pJoint, uint16_t dValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_POSITION_D, 2, (Joint*)pJoint, (void*)&dValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPositionDs(JOINT_HANDLE pJoint, uint16_t dsValue, int32_t timeout, Callback_t callBack) {
+	return jointSet(S_POSITION_DS, 2, (Joint*)pJoint, (void*)&dsValue, timeout, callBack);
+}
+
+int32_t __stdcall jointSetScpMask(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, Callback_t callBack) {
+	return jointSet(SCP_MASK, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
+}
+
+int32_t __stdcall jointSetScpInterval(JOINT_HANDLE pJoint, uint16_t interval, int32_t timeout, Callback_t callBack) {
+	return jointSet(SCP_REC_TIM, 2, (Joint*)pJoint, (void*)&interval, timeout, callBack);
+}
+
+int32_t __stdcall jointSetBootloader(JOINT_HANDLE pJoint, uint16_t mask, int32_t timeout, Callback_t callBack) {
+	return jointSet(SYS_IAP, 2, (Joint*)pJoint, (void*)&mask, timeout, callBack);
 }
 
 
-int32_t jointGetType(Joint* pJoint, mCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, callBack);
-  return 0;
-}
-
-int32_t jointGetTypeTimeout(Joint* pJoint, int32_t timeout) { //us
-  int16_t i;
-  if (rx_flag[SYS_MODEL_TYPE] == CMD_IN_PROGRESS) {
-      //reading in process
-      return -2;
-  }
-  rx_flag[SYS_MODEL_TYPE] = CMD_IN_PROGRESS;
-  readEntryCallback(pJoint->basicModule, SYS_MODEL_TYPE, 2, _onCommonReadEntry);
-  for (i = 0; i < timeout; i++) {
-      if (rx_flag[SYS_MODEL_TYPE] == CMD_ACK_OK) {
-          rx_flag[SYS_MODEL_TYPE] = CMD_IDLE;
-          return 0;
-      }
-      delay_us(1);
-  }
-  rx_flag[SYS_MODEL_TYPE] = CMD_IDLE;
-  return -1;
-}
-
-int32_t jointGetVoltage(Joint* pJoint, mCallback_t callBack) {
-  readEntryCallback(pJoint->basicModule, SYS_VOLTAGE, 2, callBack);
-  return 0;
-}
-
-/// Set Value to Joints
-int32_t jointSetMode(Joint* pJoint, uint16_t mode,  mCallback_t callBack) {
-  if (isJointMode(mode)) {
-    writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, callBack);
-    return 0;
-  }
-  return -1;
-}
-
-int32_t jointSetModeTimeout(Joint* pJoint, uint16_t mode, int32_t timeout) { //us
-  int16_t i;
-  if (tx_flag[TAG_WORK_MODE] == CMD_IN_PROGRESS) {
-      //reading in process
-      return -2;
-  }
-  tx_flag[TAG_WORK_MODE] = CMD_IN_PROGRESS;
-  writeEntryCallback(pJoint->basicModule, TAG_WORK_MODE, (void*)&mode, 2, _onCommonWriteEntry);
-  for (i = 0; i < timeout; i++) {
-      if (tx_flag[TAG_WORK_MODE] == CMD_ACK_OK) {
-          tx_flag[TAG_WORK_MODE] = CMD_IDLE;
-          return 0;
-      }
-      delay_us(1);
-  }
-  tx_flag[TAG_WORK_MODE] = CMD_IDLE;
-  return -1;
-}
 
 
