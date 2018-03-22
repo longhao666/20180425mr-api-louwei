@@ -402,7 +402,7 @@ int32_t __stdcall jointGetMaxAcceleration(JOINT_HANDLE pJoint, uint16_t* data, i
 }
 
 int32_t __stdcall jointGetPositionLimit(JOINT_HANDLE pJoint, uint16_t* data, int32_t timeout, Callback_t callBack) {
-	return jointGet(LIT_MIN_POSITION_L, 2, (Joint*)pJoint, data, timeout, callBack);
+	return jointGet(LIT_MIN_POSITION_L, 8, (Joint*)pJoint, data, timeout, callBack);
 }
 
 int32_t __stdcall jointGetCurrP(JOINT_HANDLE pJoint, uint16_t* pValue, int32_t timeout, Callback_t callBack) {
