@@ -30,7 +30,7 @@
 
 #define MAX_CAN_DEVICES 4
 #define MAX_JOINTS 20
-#define MAX_GRIPPERS 1
+#define MAX_GRIPPERS 3
 
 #define MASTER(x) x     // CAN devices id
 
@@ -585,30 +585,42 @@ int32_t __stdcall jointSetMode(
 	int32_t timeout,
 	Callback_t callBack);
 
+/// <summary> Joint set current. </summary>
+/// <remarks> Louwei, 2018/3/23. </remarks>
+/// <param name="pJoint">  	The joint. </param>
+/// <param name="speed">   	The current unit is Amps. </param>
+/// <param name="timeout"> 	The timeout. </param>
+/// <param name="callBack">	The call back. </param>
+/// <returns> A MRAPI error code. </returns>
+int32_t __stdcall jointSetCurrent(
+	JOINT_HANDLE pJoint, 
+	float current, 
+	int32_t timeout, 
+	Callback_t callBack);
 
 /// <summary> Joint set speed. </summary>
 /// <remarks> Set joint target speed by its handle. </remarks>
 /// <param name="pJoint">  	The joint handle. </param>
-/// <param name="speed">   	The speed. </param>
+/// <param name="speed">   	The speed unit is degree/s. </param>
 /// <param name="timeout"> 	The timeout. </param>
 /// <param name="callBack">	The callback function. </param>
 /// <returns> A MRAPI error code. </returns>
 int32_t __stdcall jointSetSpeed(
 	JOINT_HANDLE pJoint, 
-	int32_t speed,
+	float speed,
 	int32_t timeout, 
 	Callback_t callBack);
 
 /// <summary> Joint set position. </summary>
 /// <remarks> Set joint target position by its handle. </remarks>
 /// <param name="pJoint">  	The joint handle. </param>
-/// <param name="position">	The position. </param>
+/// <param name="position">	The position unit is degree. </param>
 /// <param name="timeout"> 	The timeout. </param>
 /// <param name="callBack">	The callback function. </param>
 /// <returns> A MRAPI error code. </returns>
 int32_t __stdcall jointSetPosition(
 	JOINT_HANDLE pJoint,
-	int32_t position, 
+	float position,
 	int32_t timeout,
 	Callback_t callBack);
 

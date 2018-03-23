@@ -79,6 +79,7 @@ EXPORTS
 	gripperSetSpeed @77
 	gripperSetPosition @78
 	gripperSetUpdate @79
+	jointSetCurrent @80
 
 
 

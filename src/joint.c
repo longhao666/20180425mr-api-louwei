@@ -467,12 +467,22 @@ int32_t __stdcall jointSetMode(JOINT_HANDLE pJoint, jointMode_t mode, int32_t ti
 	return MR_ERROR_ILLDATA;
 }
 
-int32_t __stdcall jointSetSpeed(JOINT_HANDLE pJoint, int32_t speed, int32_t timeout, Callback_t callBack) {
-	return jointSet(TAG_SPEED_L, 4, (Joint*)pJoint, (void*)&speed, timeout, callBack);
+int32_t __stdcall jointSetCurrent(JOINT_HANDLE pJoint, float current, int32_t timeout, Callback_t callBack) {
+	int32_t buf;
+	buf = (int32_t)(current *1000.0f);
+	return jointSet(TAG_CURRENT_L, 4, (Joint*)pJoint, (void*)&buf, timeout, callBack);
 }
 
-int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, int32_t position, int32_t timeout, Callback_t callBack) {
-	return jointSet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&position, timeout, callBack);
+int32_t __stdcall jointSetSpeed(JOINT_HANDLE pJoint, float speed, int32_t timeout, Callback_t callBack) {
+	int32_t buf;
+	buf = (int32_t)(speed / 360.0f*65536.0f*(float)(*((Joint*)pJoint)->jointRatio));
+	return jointSet(TAG_SPEED_L, 4, (Joint*)pJoint, (void*)&buf, timeout, callBack);
+}
+
+int32_t __stdcall jointSetPosition(JOINT_HANDLE pJoint, float position, int32_t timeout, Callback_t callBack) {
+	int32_t buf;
+	buf = (int32_t)(position / 360.0f*65536.0f);
+	return jointSet(TAG_POSITION_L, 4, (Joint*)pJoint, (void*)&buf, timeout, callBack);
 }
 
 int32_t __stdcall jointSetMaxSpeed(JOINT_HANDLE pJoint, int32_t maxspeed, int32_t timeout, Callback_t callBack) {
