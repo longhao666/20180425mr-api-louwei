@@ -22,15 +22,24 @@ SET(CMAKE_BUILD_TYPE Release)
 ADD_DEFINITIONS(-DLinux)
 
 INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/include)
+SET(USE_CAN_DRIVER "ethernet")
 
-ADD_DEFINITIONS(-DPCAN_BASIC)
-FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib  NO_DEFAULT_PATH)
-INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
-INCLUDE_DIRECTORIES(/usr/include)
-SET(DRIVER_SRC
-      ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
-      ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_linux.c
-)
+IF(${USE_CAN_DRIVER} MATCHES "pcanbasic")
+    ADD_DEFINITIONS(-DPCAN_BASIC)
+    FIND_LIBRARY(CAN_DRIVER_LIB   NAMES pcanbasic PATHS /usr/lib  NO_DEFAULT_PATH)
+    INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic)
+    INCLUDE_DIRECTORIES(/usr/include)
+    SET(DRIVER_SRC
+          ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/pcan_basic.c
+          ${${LIB_NAME}_SOURCE_DIR}/drivers/pcan_basic/thread_linux.c
+    )
+ELSE(${USE_CAN_DRIVER} MATCHES "ethernet")
+    ADD_DEFINITIONS(-DECAN_BASIC)
+    INCLUDE_DIRECTORIES(${${LIB_NAME}_SOURCE_DIR}/drivers/ethernet)
+    SET(DRIVER_SRC
+          ${${LIB_NAME}_SOURCE_DIR}/drivers/ethernet/ecan_basic.c
+    )
+ENDIF()
 
 SET(SRC_SRCS
       ${${LIB_NAME}_SOURCE_DIR}/src/module.c
@@ -54,9 +63,9 @@ set_target_properties(${LIB_NAME} PROPERTIES VERSION ${${LIB_NAME}_VERSION_STRIN
         SOVERSION ${${LIB_NAME}_VERSION_MAJOR})
 #ADD_LIBRARY(${LIB_NAME} STATIC ${SRCS})
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${CAN_DRIVER_LIB})
-TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm)
+TARGET_LINK_LIBRARIES(${LIB_NAME} -lrt -lpthread -lm  -lpcap)
 
-#ADD_SUBDIRECTORY(./examples/test3 test3)
+ADD_SUBDIRECTORY(./examples/test1 test1)
 
 INSTALL(TARGETS ${LIB_NAME}
         RUNTIME DESTINATION bin

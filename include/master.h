@@ -7,5 +7,9 @@
   #include "pcan_basic.h"
 #endif
 
+#if defined ECAN_BASIC
+    #include "ecan_basic.h"
+#endif
+
 
 #endif

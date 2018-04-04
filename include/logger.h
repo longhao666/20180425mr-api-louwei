@@ -12,8 +12,8 @@
 #include "mrapi.h"
 
 #define LOG_MSG_ON
-#define LOG_LEVEL 1
-#define LOG_APPEND 0
+#define LOG_LEVEL 4
+#define LOG_APPEND 1
 
 #define PLOG(level, ...) \
     {						\

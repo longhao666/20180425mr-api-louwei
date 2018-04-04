@@ -37,8 +37,8 @@ typedef struct td_module
     Callback_t* readDoneCb;
     Callback_t* writeDoneCb;
     uint16_t syncReceiveIndex[4];
-	uint16_t* readFlag;
-	uint16_t* writeFlag;
+    int16_t* readFlag;
+    int16_t* writeFlag;
 	uint8_t isOnline;
 }Module;
 

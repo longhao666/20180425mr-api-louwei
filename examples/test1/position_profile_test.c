@@ -10,6 +10,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 JOINT_HANDLE joint1;
 position_profile_t position_pro_strut;
@@ -22,7 +23,7 @@ float Pos_LinearRampPro_Init(void)
 	float goalPos = 0;
     jointGetPosition(joint1, &initPos, 1000, NULL);
 	initPos_f = (float)initPos / 65536.0f*360.0f;
-	printf("\nCurrent position is %f, Please enter goal position : ", initPos_f);
+    printf("\nCurrent position is %f, Please enter goal position : ", initPos_f);
     scanf("%f", &goalPos);
     position_profile_init(&position_pro_strut, goalPos, initPos_f,
 		60.0f, 180.0f);
@@ -103,19 +104,25 @@ int main()
 {
 	float goalPos = 0;
 
-	startMaster("pcanusb1", MASTER(0));
+    startMaster("enp0s25-1", MASTER(0));
 	printf("Master Started\n");
 
-    joint1 = jointUp(0x07, MASTER(0));
+    joint1 = jointUp(0x01, MASTER(0));
 	if (joint1) {
-		if (jointSetMode(joint1, MODE_CYCLESYNC, 1000, NULL) == MR_ERROR_ACK1) {
-			printf("Set mode to MODE_CYCLESYNC.\n");
-		}
-		goalPos = Pos_LinearRampPro_Init();
+        if (jointSetMode(joint1, joint_cyclesync, 50000, NULL) == MR_ERROR_ACK1) {
+            printf("Set mode to MODE_CYCLESYNC.\n");
+        }
+        else {
+            printf("jointSetMode timeout\n");
+        }
+        goalPos = Pos_LinearRampPro_Init();
+        StartTimerLoop(200, TimerThreadLoop);
+        joinMaster(MASTER(0));
 	}
-    StartTimerLoop(200, TimerThreadLoop);
+    else {
+        stopMaster(MASTER(0));
+    }
 
-	joinMaster(MASTER(0));
 
     return 0;
 }

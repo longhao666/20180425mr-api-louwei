@@ -1,10 +1,10 @@
 #include <string.h>
 #include "module.h"
 
-#define CMD_IN_PROGRESS -1
-#define CMD_ACK_OK      1
-#define CMD_ACK_NOK      2
-#define CMD_IDLE        0
+#define CMD_IN_PROGRESS (int16_t)-1
+#define CMD_ACK_OK      (int16_t)2
+#define CMD_ACK_NOK     (int16_t)1
+#define CMD_IDLE        (int16_t)0
 
 int32_t registerReadCallback(Module* d, uint8_t index, Callback_t callBack) {
   d->readDoneCb[index] = callBack;
@@ -108,7 +108,7 @@ int32_t moduleGet(uint8_t index, uint8_t datLen, Module* pModule, void* data, in
 		if (pModule->readFlag[index] == CMD_ACK_OK) {
 			if (data)
 				memcpy(data, (void*)&(pModule->memoryTable[index]), datLen);
-			pModule->readFlag[index] = CMD_IDLE;
+            pModule->readFlag[index] = CMD_IDLE;
 			return MR_ERROR_OK;
 		}
 		delay_us(1);
@@ -146,11 +146,11 @@ int32_t moduleSet(uint8_t index, uint8_t datLen, Module* pModule, void* data, in
 			if (pModule->writeFlag[index] == CMD_ACK_OK) ret = MR_ERROR_ACK1;
 			else if (pModule->writeFlag[index] == CMD_ACK_NOK) ret = MR_ERROR_ACK0;
 			pModule->writeFlag[index] = CMD_IDLE;
-			return ret;
+            return ret;
 		}
 		delay_us(1);
 	}
-	pModule->writeFlag[index] = CMD_IDLE;
+    pModule->writeFlag[index] = CMD_IDLE;
 	return MR_ERROR_TIMEOUT;
 }
 
@@ -207,7 +207,7 @@ void canDispatch(Module *d, Message *msg)
       uint8_t len = msg->len - 2;
       if (cmd == CMDTYPE_WR) {
         uint8_t ack = msg->data[2];
-		d->writeFlag[index] = CMD_ACK_OK;
+        d->writeFlag[index] = CMD_ACK_NOK+ack;
         if (d->writeDoneCb[index]) {
           d->writeDoneCb[index](*(d->moduleId), index, &ack);
         }
