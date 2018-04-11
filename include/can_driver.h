@@ -12,6 +12,10 @@
 #include <Windows.h>
 #define TASK_HANDLE HANDLE
 void usleep(__int64 usec);
+
+#elif defined CAN_STM32
+#define TASK_HANDLE int
+void usleep(int usec);
 #endif
 
 #include "mrapi.h"  //should before logger.h

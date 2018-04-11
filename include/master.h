@@ -11,5 +11,8 @@
     #include "ecan_basic.h"
 #endif
 
+#if defined CAN_STM32
+    #include "can_stm32.h"
+#endif
 
 #endif

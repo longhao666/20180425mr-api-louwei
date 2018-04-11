@@ -1,7 +1,9 @@
 #include <math.h>
 #include "master.h"
 
+#ifndef UNUSED
 #define UNUSED(arg) (void)arg
+#endif
 
 void canDispatch(Module *d, Message *msg);
 

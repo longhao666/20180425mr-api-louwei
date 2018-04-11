@@ -1,4 +1,4 @@
-﻿#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include "gripper.h"
 
@@ -102,8 +102,8 @@ Gripper* gripperConstruct(uint16_t id, canSend_t canSend) {
 	pModule = pGripper->basicModule;
 	pModule->memoryLen = CMDMAP_LEN;
 	pModule->memoryTable = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
-	pModule->readFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
-	pModule->writeFlag = (uint16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+	pModule->readFlag = (int16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
+	pModule->writeFlag = (int16_t*)calloc(CMDMAP_LEN, sizeof(uint16_t));
 	memset(pModule->memoryTable, 0, CMDMAP_LEN * sizeof(uint16_t));
 	pModule->readDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));
 	pModule->writeDoneCb = (Callback_t*)calloc(CMDMAP_LEN, sizeof(Callback_t));

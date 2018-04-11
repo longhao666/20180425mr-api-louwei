@@ -87,7 +87,7 @@ int TimerThreadLoop(LPVOID arg)
 			v = position_pro_strut.v;
 
 			ret = jointPush(handle, q, v, 0);
-			printf("target position: %3.3f\n", q);
+			printf("target position: %3.3f, velocity: %3.3f\n", q, v);
 		}
 		else {
 			jointPoll(handle, &realPos, NULL, NULL);

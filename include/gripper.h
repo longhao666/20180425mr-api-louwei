@@ -1,4 +1,4 @@
-﻿#ifndef __GRIPPER_H__
+#ifndef __GRIPPER_H__
 #define __GRIPPER_H__
 #include "mrapi.h"
 #include "module.h"

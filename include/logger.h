@@ -1,4 +1,4 @@
-﻿#ifndef _LOGGER_H_
+#ifndef _LOGGER_H_
 #define _LOGGER_H_
 
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include "mrapi.h"
 
 #define LOG_MSG_ON
-#define LOG_LEVEL 4
+#define LOG_LEVEL 0
 #define LOG_APPEND 1
 
 #define PLOG(level, ...) \
