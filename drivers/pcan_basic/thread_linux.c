@@ -16,7 +16,7 @@ void canReceiveLoop_signal(int sig)
 {
 }
 /* We assume that ReceiveLoop_task_proc is always the same */
-static void (*canRxInterruptISR)(Message* msg) = NULL;
+static void (*canRxInterruptISR)(CAN_HANDLE h, Message* msg) = NULL;
 /**
  * Enter in realtime and start the CAN receiver loop
  * @param port
@@ -53,7 +53,7 @@ void* canReceiveLoop(void* arg)
         if (canReceive_driver(handle, &rxMsg) != 0) {
             pthread_mutex_lock(&CanThread_mutex);
             if (canRxInterruptISR)
-                canRxInterruptISR(&rxMsg);
+                canRxInterruptISR(handle, &rxMsg);
             pthread_mutex_unlock(&CanThread_mutex);
         }
         else {
