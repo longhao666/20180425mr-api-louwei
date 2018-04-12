@@ -10,9 +10,11 @@
 #include <unistd.h>
 #include "ecan_basic.h"
 
+#define RELAY_TYPE (uint16_t)0x1234
+
 pcap_t* device = NULL;
 pthread_t thread = (pthread_t)NULL;
-static void (*canRxInterruptISR)(Message* msg) = NULL;
+static void (*canRxInterruptISR)(CAN_HANDLE h, Message* msg) = NULL;
 int loopFlag = 0;
 
 void getPacket(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * packet);
@@ -55,7 +57,9 @@ void WaitReceiveTaskEnd(TASK_HANDLE* Thread)
 }
 
 uint8_t canChangeBaudRate_driver(CAN_HANDLE fd, char* baud)
-{}
+{
+
+}
 
 CAN_HANDLE canOpen_driver(const char* busno, const char* baud)
 {
@@ -82,20 +86,22 @@ CAN_HANDLE canOpen_driver(const char* busno, const char* baud)
     return (char)canId;
 }
 
-void canReset_driver(CAN_HANDLE handle, char* baud){}
+void canReset_driver(CAN_HANDLE handle, char* baud)
+{
+
+}
 
 uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m)
 {
     char errBuf[PCAP_ERRBUF_SIZE];
     char *sendBuf;
 
-//    printf("sending : %d\n", fd0);
     sendBuf = malloc(15 + sizeof(Message));
     for (int i = 0; i < 12; i++) sendBuf[i] = 0xFF;
-    sendBuf[12] = 0x12;
-    sendBuf[13] = 0x34;
+    sendBuf[12] = (uint8_t)RELAY_TYPE;
+    sendBuf[13] = (uint8_t)(RELAY_TYPE>>8);
     sendBuf[14] = fd0;
-    memcpy(sendBuf+15, (void*)m, sizeof(Message));
+    memcpy(sendBuf + 15, (void*)m, sizeof(Message));
     if (pcap_inject(device, (const void*)sendBuf, 15 + sizeof(Message)) == -1) {
         pcap_perror(device, errBuf);
         printf("Couldn't send frame: %s\n", errBuf);
@@ -103,7 +109,9 @@ uint8_t canSend_driver(CAN_HANDLE fd0, Message const *m)
     }
 }
 
-uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m){}
+uint8_t canReceive_driver(CAN_HANDLE fd0, Message *m) {
+
+}
 
 int canClose_driver(CAN_HANDLE handle)
 {
@@ -114,14 +122,10 @@ void getPacket(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * p
 {
     Message m;
 
-    if((packet[12] == 0x12) && (packet[13] == 0x34)) {
-        memcpy(&m, packet+15, sizeof(Message));
-//        printf("id: %d, len: %d, rtr: %d\ndata: ", m.cob_id, m.len, m.rtr);
-//        for (int i = 0; i < m.len; i++) {
-//            printf("0x%X ", m.data[i]);
-//        }
-//        printf("\n");
-        if(canRxInterruptISR) canRxInterruptISR(&m);
+    if((packet[12] == (uint8_t)RELAY_TYPE) && (packet[13] == (uint8_t)(RELAY_TYPE>>8))) {
+        uint8_t canId = packet[14];
+        memcpy(&m, packet + 15, sizeof(Message));
+        if (canRxInterruptISR) canRxInterruptISR(canId, &m);
     }
 }
 

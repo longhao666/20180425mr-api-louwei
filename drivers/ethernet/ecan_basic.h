@@ -8,7 +8,7 @@
 #define MS_TO_TIMEVAL(ms) ms*1000L
 #define US_TO_TIMEVAL(us) us
 
-#define CAN_HANDLE char
+#define CAN_HANDLE uint8_t
 
 #ifdef __cplusplus
 extern "C"

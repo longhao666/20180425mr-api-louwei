@@ -17,7 +17,7 @@ uint8_t can5Send(Message* msg) { return 0;/* return canSend_driver(hCan[4], msg)
 uint8_t can6Send(Message* msg) { return 0;/* return canSend_driver(hCan[5], msg); */}
 
 // Max 4 CAN Ports
-TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
+TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {(TASK_HANDLE)NULL};
 canSend_t hCansendHandler[MAX_CAN_DEVICES] = { can1Send, can2Send, can3Send, can4Send };
 
 /// CAN read thread or interrupt
