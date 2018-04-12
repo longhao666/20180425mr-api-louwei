@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "can_stm32.h"
 #include "stm32f4xx.h"
+#include "comm.h"
 
 void CAN1_RX0_IRQHandler(void);
 void CAN2_RX0_IRQHandler(void);
@@ -117,9 +118,7 @@ uint8_t CAN_hw_rd(CAN_TypeDef* device, Message *msg, int32_t fifo_id)
 }
 
 /* We assume that ReceiveLoop_task_proc is always the same */
-void (*canRxInterruptISR)(Message* msg) = NULL;
-
-void usleep(int usec) {}
+void (*canRxInterruptISR)(CAN_HANDLE h, Message* msg) = NULL;
 
 int TranslateBaudeRate(const char* optarg) {
 	if (!strcmp(optarg, "1M")) return 1000000;
@@ -146,7 +145,7 @@ static void CAN_set_timing (CAN_HANDLE fd, uint32_t tseg1, uint32_t tseg2, uint3
 void CreateReceiveTask(CAN_HANDLE fd, TASK_HANDLE* Thread, void* ReceiveLoopPtr) 
 {
   if (fd == NULL) return;
-  canRxInterruptISR = (void (*)(Message*))ReceiveLoopPtr;
+  canRxInterruptISR = (void (*)(CAN_HANDLE, Message*))ReceiveLoopPtr;
   if ((fd->Instance == CAN1) && Thread) *Thread = (int)CAN1_RX0_IRQHandler;
   if((fd->Instance == CAN2) && Thread) *Thread = (int)CAN2_RX0_IRQHandler;
 }
@@ -180,6 +179,7 @@ uint8_t canChangeBaudRate_driver(CAN_HANDLE fd, char* baud) {
 		brp  = (CAN_CLK / 9) / baudrate;
 		CAN_set_timing(fd, 5, 3, 1, brp);
 	}
+  return 0;
 }
   
 // CAN1_Mode_Init(CAN_SJW_1TQ,CAN_BS2_6TQ,CAN_BS1_8TQ,6,CAN_MODE_NORMAL); //CAN初始化,波特率500Kbps      
@@ -230,6 +230,7 @@ uint8_t canSend_driver(CAN_HANDLE fd, Message const *m) {
 uint8_t canReceive_driver(CAN_HANDLE fd, Message *m) {
   return CAN_hw_rd(fd->Instance, m, 0);
 }
+
 int canClose_driver(CAN_HANDLE fd) {
   if (fd == NULL) return 0;
   if (fd->Instance == CAN1)
@@ -247,18 +248,22 @@ int canClose_driver(CAN_HANDLE fd) {
 void CAN1_RX0_IRQHandler(void)
 {
   Message m;
-  CAN_hw_rd(CAN1, &m, 0);
-  if (canRxInterruptISR) canRxInterruptISR(&m);
-  // Release FIFO 0/1 output mailbox
-  CAN1->RF0R = CAN_RF0R_RFOM0;
+  if (CAN1->RF0R & 3) {
+    CAN_hw_rd(CAN1, &m, 0);
+    if (canRxInterruptISR) canRxInterruptISR(CAN_Device[0], &m);
+    // Release FIFO 0/1 output mailbox
+    CAN1->RF0R = CAN_RF0R_RFOM0;
+  }
 }
 
 //CAN中断服务函数
 void CAN2_RX0_IRQHandler(void)
 {
   Message m;
-  CAN_hw_rd(CAN2, &m, 0);
-  if (canRxInterruptISR) canRxInterruptISR(&m);
-  // Release FIFO 0/1 output mailbox
-  CAN2->RF0R = CAN_RF0R_RFOM0;
+  if (CAN2->RF0R & 3) {
+    CAN_hw_rd(CAN2, &m, 0);
+    if (canRxInterruptISR) canRxInterruptISR(CAN_Device[1], &m);
+    // Release FIFO 0/1 output mailbox
+    CAN2->RF0R = CAN_RF0R_RFOM0;
+  }
 }

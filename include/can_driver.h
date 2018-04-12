@@ -14,8 +14,9 @@
 void usleep(__int64 usec);
 
 #elif defined CAN_STM32
+#include "stm32f4xx.h"
 #define TASK_HANDLE int
-void usleep(int usec);
+void usleep(uint32_t usec);
 #endif
 
 #include "mrapi.h"  //should before logger.h

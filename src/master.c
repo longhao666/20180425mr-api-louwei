@@ -21,7 +21,7 @@ TASK_HANDLE hReceiveTask[MAX_CAN_DEVICES] = {NULL};
 canSend_t hCansendHandler[MAX_CAN_DEVICES] = { can1Send, can2Send, can3Send, can4Send };
 
 /// CAN read thread or interrupt
-void _canReadISR(Message* msg) {
+void _canReadISR(CAN_HANDLE h, Message* msg) {
   uint16_t cob_id = msg->cob_id;
   uint16_t id = getNodeId(cob_id);
 
