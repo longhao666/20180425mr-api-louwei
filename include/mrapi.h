@@ -1,4 +1,4 @@
-﻿//  mrapi.h
+//  mrapi.h
 //
 //  ~~~~~~~~~~~~
 //
@@ -1050,14 +1050,14 @@ int32_t __stdcall gripperGetId(
 
 /// <summary> Gripper poll. </summary>
 /// <remarks> Louwei, 2018/3/20. </remarks>
-/// <param name="h">		   	The JOINT_HANDLE to process. </param>
+/// <param name="h">		   	The GRIPPER_HANDLE to process. </param>
 /// <param name="left_pos">	   	[in,out] If non-null, the left position. </param>
 /// <param name="right_pos">   	[in,out] If non-null, the right position. </param>
 /// <param name="left_torque"> 	[in,out] If non-null, the left torque. </param>
 /// <param name="right_torque">	[in,out] If non-null, the right torque. </param>
 /// <returns> An int32_t. </returns>
 int32_t __stdcall gripperPoll(
-	JOINT_HANDLE h, 
+	GRIPPER_HANDLE h, 
 	float* left_pos, 
 	float* right_pos, 
 	float* left_torque, 

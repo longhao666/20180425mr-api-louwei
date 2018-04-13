@@ -153,7 +153,7 @@ GRIPPER_HANDLE __stdcall gripperSelect(uint16_t id) {
 	return NULL;
 }
 
-int32_t __stdcall gripperPush(JOINT_HANDLE h, float left_pos, float right_pos) {
+int32_t __stdcall gripperPush(GRIPPER_HANDLE h, float left_pos, float right_pos) {
 	Gripper* pGripper = (Gripper*)h;
 	int32_t buf[2] = { 0 };
 	if (!pGripper) {
@@ -168,7 +168,7 @@ int32_t __stdcall gripperPush(JOINT_HANDLE h, float left_pos, float right_pos) {
 }
 
 /// 从内存表获取实际位置和实际电流
-int32_t __stdcall gripperPoll(JOINT_HANDLE h, float* left_pos, float* right_pos, float* left_torque, float* right_torque) {
+int32_t __stdcall gripperPoll(GRIPPER_HANDLE h, float* left_pos, float* right_pos, float* left_torque, float* right_torque) {
 	Gripper* pGripper = (Gripper*)h;
 	int32_t temp;
 	if (!pGripper) {
